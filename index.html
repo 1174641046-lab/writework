@@ -116,12 +116,21 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .ti .bd em{font-style:normal;font-size:11px;opacity:.85}
 .ti .go{flex:none;background:rgba(255,255,255,.9);color:#3E6449;border:none;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px;font-family:inherit}
 .ti.od .go{background:#fff;color:#B0402E}
+
+/* 首页两列卡片：数据统计 + 今天要处理 */
+.top-row{display:flex;gap:10px;margin-bottom:14px}
+.today-compact{margin:0;flex:1;min-width:0;padding:12px}
+.today-compact h2{font-size:13px;margin-bottom:8px}
+.today-compact .n{margin-left:0;font-size:11.5px;padding:6px 8px}
+.today-compact .ti{padding:6px 8px;margin-bottom:4px}
+.today-compact .ti .bd b{font-size:12.5px}
+.today-compact .ti .bd em{font-size:10.5px}
 /* 通知栏 / 列表滑动项 */
-.swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px}
+.swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px;contain:layout paint}
 .swipe:last-child{margin-bottom:0}
-.sw-del{position:absolute;left:0;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:13px;font-weight:600}
+.sw-del{position:absolute;left:0;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:13px;font-weight:600;border-radius:inherit}
 .sw-del.right{left:auto;right:0}
-.swipe .ti,.swipe .note,.swipe .today-inner{position:relative;z-index:1;transition:transform .2s;will-change:transform;touch-action:pan-y;margin-bottom:0}
+.swipe .ti,.swipe .note,.swipe .today-inner{position:relative;z-index:1;transition:transform .2s;touch-action:pan-y;margin-bottom:0;border-radius:inherit}
 .note-count{cursor:pointer;display:inline-flex;align-items:center;gap:2px;color:var(--text2);font-size:13px}
 .note-count svg{width:16px;height:16px;stroke:var(--green)}
 .fl-row{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px 3px}
@@ -172,6 +181,7 @@ html[data-theme="dark"] .play{color:#12200F}
 
 /* ---------- 统计 ---------- */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.top-row .stats{grid-template-columns:repeat(2,1fr)}
 .st{background:var(--card);border-radius:13px;padding:11px 6px;text-align:center;box-shadow:var(--shadow)}
 .st b{display:block;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;color:var(--green)}
 .st span{font-size:10.5px;color:var(--text2);display:block;margin-top:2px}
@@ -344,8 +354,14 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
   <!-- ============ 树根（首页） ============ -->
   <section class="page on" id="page-root">
-    <div class="sec-t"><h2><svg><use href="#i-chart"/></svg>数据统计</h2></div>
-    <div class="stats" id="statBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
+    <!-- 两列卡片：数据统计 + 今天要处理 -->
+    <div class="top-row">
+      <div class="card" style="flex:1;min-width:0;padding:12px">
+        <div class="sec-t" style="margin:0 0 8px"><h2 style="font-size:13px"><svg><use href="#i-chart"/></svg>数据统计</h2></div>
+        <div class="stats" id="statBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
+      </div>
+      <div class="today today-compact" id="todayBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
+    </div>
 
     <div class="sec-t"><h2><svg><use href="#i-mic"/></svg>录音识别</h2><span id="recCap"></span></div>
     <div class="card rec" id="recCard">
@@ -384,8 +400,6 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>备忘录</h2><span id="noteCount"></span></div>
     <div id="noteList" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
-
-    <div class="today" id="todayBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
 
     <div class="sec-t"><h2><svg><use href="#i-cal"/></svg>灵感热力图</h2></div>
     <div class="card">
@@ -531,7 +545,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.4.0</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.5.0</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
