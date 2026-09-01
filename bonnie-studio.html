@@ -229,9 +229,11 @@ html[data-theme="dark"] .hcell.l4{background:var(--green);color:#12200F}
 .wf{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .wcard{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:.15s;display:block;text-decoration:none;color:inherit}
 .wcard:active{transform:scale(.98)}
-.wcover{height:0;position:relative;overflow:hidden}
+.wcover{height:0;position:relative;overflow:hidden;background:linear-gradient(135deg,#8FAF9A,#5E8C6C)}
 .wcover .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-.wcover .ph svg{width:26px;height:26px;stroke:rgba(255,255,255,.85);fill:none;stroke-width:1.6}
+.wcover .ph svg{width:30px;height:30px;stroke:rgba(255,255,255,.9);fill:none;stroke-width:1.6}
+.wcover .ctype{position:absolute;left:7px;top:7px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;display:flex;align-items:center;gap:3px}
+.wcover .ctype svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2}
 .wcover .pf{position:absolute;left:7px;bottom:7px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600}
 .wcover .hot{position:absolute;right:7px;top:7px;background:rgba(0,0,0,.55);color:#FFD9A0;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;display:flex;align-items:center;gap:3px}
 .wcover img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
@@ -681,7 +683,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>枝集</span></div><b style="color:var(--green);font-size:14px">v1.7.4</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>枝集</span></div><b style="color:var(--green);font-size:14px">v1.7.7</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -698,6 +700,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
   <button data-p="branch" onclick="Nav.to('branch')"><svg><use href="#i-branch"/></svg><span>枝条</span></button>
   <button data-p="leaf" onclick="Nav.to('leaf')"><svg><use href="#i-leaf"/></svg><span>绿叶</span></button>
   <button data-p="forest" onclick="Nav.to('forest')"><svg><use href="#i-forest"/></svg><span>森林</span></button>
+  <button data-p="me" onclick="Nav.to('me')"><svg><use href="#i-gear"/></svg><span>设置</span></button>
 </nav>
 
 <!-- 备忘录详情 -->
@@ -1544,10 +1547,12 @@ var Leaf={
     var h='';
     list.forEach(function(c){
       var hgt=[110,142,96,126,150,108][c.title.length%6];
-      var cover=c.cover?'<img src="'+esc(c.cover)+'" alt="">':
-        '<div class="ph" style="height:'+hgt+'px;background:linear-gradient(135deg,'+esc(c.color||'#8FAF9A')+','+esc(c.color2||'#5E8C6C')+')"><svg><use href="#i-play"/></svg></div>';
+      var type=c.type||'图文';
+      var cover=c.cover?'<img src="'+esc(c.cover)+'" alt="" onerror="this.style.display=\'none\'">':
+        '<div class="ph">'+ (type==='视频'?'<svg><use href="#i-play"/></svg>':'<svg><use href="#i-img"/></svg>') +'</div>';
+      var ctypeBadge='<span class="ctype"><svg><use href="#'+(type==='视频'?'i-play':'i-img')+'"/></svg>'+esc(type)+'</span>';
       var wcard='<div class="wcard" onclick="Leaf.open(\''+c.id+'\')">'+
-        '<div class="wcover" style="height:'+hgt+'px">'+cover+
+        '<div class="wcover" style="height:'+hgt+'px">'+cover+ctypeBadge+
           '<span class="pf">'+esc(c.platform||'小红书')+'</span>'+
           (c.hot?'<span class="hot"><svg class="ico" style="width:9px;height:9px"><use href="#i-fire"/></svg>'+esc(c.hot)+'</span>':'')+
         '</div>'+
@@ -1642,15 +1647,46 @@ var Leaf={
     var hot='';
     if(hotM)hot=hotM[1]+(hotM[2]?'万':'');
     if(!hot){var hm=raw.match(/(\d+(?:\.\d+)?)\s*万/);if(hm)hot=hm[1]+'万';}
+    // 封面与类型识别：图片素材取首图，视频素材取直链首帧(或平台预览图)
+    var urls=(raw.match(/https?:\/\/[^\s\u4e00-\u9fa5"'<>]+/g)||[]);
+    var imgUrl='', videoFile='';
+    urls.forEach(function(u){
+      if(!imgUrl&&/\.(?:jpg|jpeg|png|gif|webp|bmp)(?:[?#]|$)/i.test(u))imgUrl=u;
+      if(!videoFile&&/\.(?:mp4|webm|m3u8)(?:[?#]|$)/i.test(u))videoFile=u;
+    });
+    var type=(videoFile||plat==='抖音'||plat==='视频号'||plat==='B站')?'视频':'图文';
     var card={id:uid(),title:title.slice(0,40)||'未命名素材',author:author||'未识别到作者',
-      url:urlM?urlM[0]:'',platform:plat,hot:hot||'',
+      url:urlM?urlM[0]:'',platform:plat,hot:hot||'',type:type,
+      cover:imgUrl||'',videoFile:videoFile||'',
       color:['#8FAF9A','#C9A88C','#9BADCB','#CBA3B0','#A8BFA0','#C4B39A'][Math.floor(Math.random()*6)],
       color2:['#5E8C6C','#A87B58','#6F87AD','#A87288','#7C9A72','#9A8763'][Math.floor(Math.random()*6)],
-      cover:'',tags:extractKeywords(title,3),created:Date.now()};
+      tags:extractKeywords(title,3),created:Date.now()};
     Data.cards.unshift(card);Data.saveCards();
     $('#pasteText').value='';this.togglePaste();
     if(this.pf!=='all'&&this.pf!==plat)this.setPf('all');else this.render();
+    // 视频素材：直链可抓取首帧作为封面（跨域允许时生效，否则保留平台预览图或占位）
+    if(type==='视频'&&videoFile)Leaf.captureFrame(card);
     toast(urlM?'已加入，点卡片可跳转观看':'已加入（未识别到链接，可稍后补充）');
+  },
+  captureFrame:function(card){
+    if(!card.videoFile)return;
+    var v=document.createElement('video');
+    v.crossOrigin='anonymous';v.muted=true;v.preload='metadata';v.playsInline=true;v.src=card.videoFile;
+    var done=false;
+    function finish(data){
+      if(done)return;done=true;
+      try{var c=(Data.cards.filter(function(x){return x.id===card.id;})||[])[0];
+        if(c&&data){c.cover=data;Data.saveCards();Leaf.render();}}catch(e){}
+    }
+    v.addEventListener('loadeddata',function(){try{v.currentTime=0.1;}catch(e){}});
+    v.addEventListener('seeked',function(){
+      try{var cv=document.createElement('canvas');cv.width=v.videoWidth||320;cv.height=v.videoHeight||180;
+        cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);finish(cv.toDataURL('image/jpeg',0.7));
+      }catch(e){finish(null);}
+    });
+    v.addEventListener('error',function(){finish(null);});
+    document.body.appendChild(v);
+    setTimeout(function(){try{v.removeAttribute('src');v.load();v.remove();}catch(e){}},9000);
   }
 };
 
