@@ -119,9 +119,10 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .ti.od .go{background:#fff;color:#B0402E}
 
 /* 首页两列卡片：数据统计 + 今日待办 */
-.top-row{display:flex;gap:10px;margin-bottom:14px;align-items:stretch}
-.top-row>.card,.top-row>.today{height:auto}
-.today-compact{margin:0;flex:1;min-width:0;padding:12px;display:flex;flex-direction:column;box-sizing:border-box}
+.top-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;align-items:stretch}
+.top-row>.card{display:flex;flex-direction:column}
+.top-row .stats{flex:1;align-content:center}
+.today-compact{margin:0;min-width:0;padding:12px;display:flex;flex-direction:column;box-sizing:border-box}
 .today-compact h2{font-size:13px;margin-bottom:8px}
 .today-compact .n{margin-left:0;font-size:11.5px;padding:6px 8px;flex:1;display:flex;align-items:center}
 .today-compact .ti{padding:6px 8px;margin-bottom:4px}
@@ -365,7 +366,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
   <section class="page on" id="page-root">
     <!-- 两列卡片：数据统计 + 今日待办 -->
     <div class="top-row">
-      <div class="card" style="flex:1;min-width:0;padding:12px">
+      <div class="card" style="min-width:0;padding:12px">
         <div class="sec-t" style="margin:0 0 8px"><h2 style="font-size:13px"><svg><use href="#i-chart"/></svg>数据统计</h2></div>
         <div class="stats" id="statBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
       </div>
@@ -1261,7 +1262,7 @@ var Render={
     });
     items.sort(function(a,b){return (b.od?1:0)-(a.od?1:0);});
     var h='<h2><svg><use href="#i-clock"/></svg>今日待办</h2>';
-    h+='<div class="tc-body" style="flex:1;display:flex;flex-direction:column;min-height:0">';
+    h+='<div class="tc-body" style="display:flex;flex-direction:column;min-height:0">';
     if(todayCnt===0&&!items.length)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
     if(!items.length&&todayCnt>0)h+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
     items.slice(0,4).forEach(function(it){
