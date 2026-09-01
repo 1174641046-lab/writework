@@ -529,7 +529,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.3.0</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.3.1</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -615,36 +615,37 @@ function makeSwipe(wrap,opt){
   var content=wrap.querySelector('.ti')||wrap.querySelector('.note')||wrap.querySelector('.today-inner');
   if(!content)return;
   var dir=opt.dir==='left'?-1:1;
-  var btnW=opt.btnW||72, sx,sy,dx=0,active=false,moved=false,sw=false;
-  wrap.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;active=true;moved=false;sw=false;content.style.transition='';},{passive:true});
+  var btnW=opt.btnW||72, sx=0,sy=0,dx=0,active=false,moved=false,revealed=false,justSwiped=false;
+  wrap.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;active=true;moved=false;content.style.transition='';},{passive:true});
   wrap.addEventListener('touchmove',function(e){
     if(!active)return;
     var t=e.touches[0],cx=t.clientX-sx,cy=t.clientY-sy;
-    if(!moved){if(Math.abs(cx)>6&&Math.abs(cx)>Math.abs(cy))moved=true;else if(Math.abs(cy)>6&&Math.abs(cx)<=Math.abs(cy)){active=false;return;}}
+    if(!moved){if(Math.abs(cx)>6&&Math.abs(cx)>Math.abs(cy))moved=true;else if(Math.abs(cy)>6){active=false;return;}}
     if(!moved)return;
-    if(dir>0){ // 右滑：内容右移，露出左侧按钮
-      if(cx>0){if(e.cancelable)e.preventDefault();dx=Math.min(cx,btnW+24);content.style.transform='translateX('+dx+'px)';}
-      else{dx=0;content.style.transform='translateX(0)';}
-    }else{ // 左滑：内容左移，露出右侧按钮
-      if(cx<0){if(e.cancelable)e.preventDefault();dx=Math.max(cx,-(btnW+24));content.style.transform='translateX('+dx+'px)';}
-      else{dx=0;content.style.transform='translateX(0)';}
-    }
+    if(e.cancelable)e.preventDefault();
+    if(dir<0)dx=Math.max(cx,-(btnW+20));else dx=Math.min(cx,btnW+20);
+    if((dir<0&&cx<0)||(dir>0&&cx>0))content.style.transform='translateX('+dx+'px)';
+    else content.style.transform='translateX(0)';
   },{passive:false});
   wrap.addEventListener('touchend',function(){
     if(!active)return;active=false;
-    if(!moved)return;
+    if(!moved){ if(revealed){content.style.transition='transform .2s';content.style.transform='translateX(0)';revealed=false;} return; }
     content.style.transition='transform .2s';
-    if(dir>0){
-      if(dx>=opt.full){content.style.transform='translateX(0)';opt.onFull&&opt.onFull();}
-      else if(dx>=opt.reveal){content.style.transform='translateX('+btnW+'px)';opt.onReveal&&opt.onReveal();}
-      else{content.style.transform='translateX(0)';sw=true;}
+    var thr=opt.reveal||btnW;
+    if(dir<0){
+      if(dx<=-opt.full){content.style.transform='translateX(0)';revealed=false;opt.onFull&&opt.onFull();}
+      else if(dx<=-thr){content.style.transform='translateX('+(-btnW)+'px)';revealed=true;justSwiped=true;setTimeout(function(){justSwiped=false;},350);}
+      else{content.style.transform='translateX(0)';revealed=false;}
     }else{
-      if(dx<=-opt.full){content.style.transform='translateX(0)';opt.onFull&&opt.onFull();}
-      else if(dx<=-opt.reveal){content.style.transform='translateX('+(-btnW)+'px)';opt.onReveal&&opt.onReveal();}
-      else{content.style.transform='translateX(0)';sw=true;}
+      if(dx>=opt.full){content.style.transform='translateX(0)';revealed=false;opt.onFull&&opt.onFull();}
+      else if(dx>=thr){content.style.transform='translateX('+btnW+'px)';revealed=true;justSwiped=true;setTimeout(function(){justSwiped=false;},350);}
+      else{content.style.transform='translateX(0)';revealed=false;}
     }
   });
-  wrap.addEventListener('click',function(e){if(sw){e.stopPropagation();e.preventDefault();sw=false;}},true);
+  // 滑动后短暂屏蔽卡片自身的打开点击，但绝不拦截删除/清除按钮
+  wrap.addEventListener('click',function(e){
+    if(justSwiped&&!e.target.closest('.sw-del')){e.stopPropagation();e.preventDefault();}
+  },true);
 }
 $('#mask').addEventListener('click',function(e){if(e.target===this)closeMask();});
 
@@ -1229,7 +1230,7 @@ var Render={
     $$('#memoListFull .swipe').forEach(function(w){var id=w.dataset.nid;makeSwipe(w,{dir:'left',reveal:48,full:9999,onReveal:function(){},onFull:function(){}});});
   },
   fullCardHTML:function(n){
-    return '<div class="swipe" data-nid="'+n.id+'"><div class="sw-del" onclick="Render.delMemo(\''+n.id+'\')">删除</div>'+Render.noteCardHTML(n,false)+'</div>';
+    return '<div class="swipe" data-nid="'+n.id+'"><div class="sw-del right" onclick="Render.delMemo(\''+n.id+'\')">删除</div>'+Render.noteCardHTML(n,false)+'</div>';
   },
   delMemo:function(id){
     var n=Data.noteById(id);if(!n)return;
@@ -1359,7 +1360,7 @@ var Leaf={
     var url;
     if(pf==='小红书')url='https://www.xiaohongshu.com/search?keyword='+encodeURIComponent(kw);
     else if(pf==='B站')url='https://search.bilibili.com/all?keyword='+encodeURIComponent(kw);
-    else if(pf==='抖音')url='https://m.douyin.com/search/'+encodeURIComponent(kw);
+    else if(pf==='抖音')url='https://www.douyin.com/search/'+encodeURIComponent(kw);
     else {toast('视频号请在微信内搜索，复制分享链接后粘贴回来');return;}
     window.open(url,'_blank','noopener');
   },
