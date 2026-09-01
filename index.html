@@ -111,6 +111,21 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .today h2{font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:10px}
 .today h2 svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2}
 .today .n{background:rgba(255,255,255,.22);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.5;margin-left:24px}
+.today-full{margin-bottom:14px}
+
+/* ---------- 总览卡片 ---------- */
+.overview-card{background:var(--card);border-radius:18px;padding:20px 20px 16px;margin-bottom:14px;box-shadow:var(--shadow);position:relative;overflow:hidden;border:1px solid var(--line)}
+.overview-card .ov-head{font-size:11px;font-weight:700;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.overview-card .ov-body{display:flex;gap:16px;align-items:flex-start}
+.overview-card .ov-text{flex:1;min-width:0}
+.overview-card .ov-text h2{font-size:19px;font-weight:700;line-height:1.35;color:var(--text);margin:0 0 8px}
+.overview-card .ov-text p{font-size:12.5px;color:var(--text2);line-height:1.65;margin:0 0 14px}
+.overview-card .ov-stats{display:flex;gap:20px}
+.overview-card .ov-stats .os-item{text-align:center}
+.overview-card .ov-stats .os-num{font-size:22px;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums;line-height:1.2}
+.overview-card .ov-stats .os-label{font-size:11px;color:var(--text3);margin-top:2px}
+.overview-card .ov-art{width:80px;flex-shrink:0;opacity:.85}
+.overview-card .ov-art svg{width:100%;height:auto}
 .ti{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.13);margin-bottom:6px}
 .ti:last-child{margin-bottom:0}
 .ti.od{background:rgba(208,80,60,.32)}
@@ -147,11 +162,23 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .ti-clear svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4}
 .ti-clear:active{transform:translateY(-50%) scale(.9)}
 
-/* ---------- 录音区 ---------- */
-.rec{text-align:center;padding:20px 16px 16px}
+/* ---------- 录音区 QUICK CAPTURE ---------- */
+.qc{padding:24px 20px 20px;text-align:center;position:relative;overflow:hidden}
+.qc::before{content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:var(--green-l);opacity:.5}
+.qc-head{font-size:11px;font-weight:700;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.qc-title{font-size:22px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:6px}
+.qc-sub{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:20px;padding:0 4px}
+.qc-actions{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.qc-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+.qc-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.qc-btn:first-child{background:var(--green);color:#fff;box-shadow:0 4px 16px rgba(46,125,50,.28)}
+html[data-theme="dark"] .qc-btn:first-child{color:#E8F5E9}
+.qc-btn:first-child.on{background:var(--danger);box-shadow:0 4px 16px rgba(216,67,21,.28);animation:breathe 1.4s infinite}
+.qc-btn-ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.qc-tip{font-size:11.5px;color:var(--text3)}
 .rec-time{font-size:34px;font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:2px;color:var(--text);line-height:1.2}
 .rec-hint{font-size:12px;color:var(--text3);margin-top:3px;min-height:18px}
-.rec-btn{width:82px;height:82px;border-radius:50%;border:none;background:var(--green);color:#fff;margin:16px auto 6px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(79,122,91,.3);transition:.16s}
+.rec-btn{width:82px;height:82px;border-radius:50%;border:none;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(79,122,91,.3);transition:.16s}
 html[data-theme="dark"] .rec-btn{color:#12200F}
 .rec-btn svg{width:32px;height:32px}
 .rec-btn.on{background:var(--danger);box-shadow:0 6px 20px rgba(192,80,60,.34);animation:breathe 1.4s infinite}
@@ -174,13 +201,15 @@ html[data-theme="dark"] .play{color:#12200F}
 .audio-box .tm{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
 
 /* ---------- 备忘录列表 ---------- */
-.note{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 38px 14px 14px;margin-bottom:11px;cursor:pointer;transition:.15s;border-left:3px solid transparent;position:relative}
+.note{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s;border-left:3px solid transparent;position:relative;display:flex;gap:12px;align-items:flex-start}
 .note:active{transform:scale(.99)}
 .note.st-写作中{border-left-color:var(--brown)}
 .note.st-已发布{border-left-color:var(--green)}
-.note h3{font-size:15px;font-weight:650;line-height:1.45;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.note .pv{font-size:12.5px;color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
-.note .mt{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);flex-wrap:wrap}
+.note .dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:6px}
+.note .nb{flex:1;min-width:0}
+.note h3{font-size:14.5px;font-weight:650;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.note .pv{font-size:12.5px;color:var(--text2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+.note .mt{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);flex-wrap:wrap}
 .note .mt .tag{display:inline-flex;align-items:center;gap:3px}
 .note .mt .tag svg{width:12px;height:12px;stroke:var(--text3);fill:none;stroke-width:2}
 /* 标题栏 N条 > 跳转 */
@@ -410,27 +439,37 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
   <!-- ============ 树根（首页） ============ -->
   <section class="page on" id="page-root">
-    <!-- 两列卡片：数据统计 + 今日待办 -->
-    <div class="top-row">
-      <div class="card" style="min-width:0;padding:12px">
-        <div class="sec-t" style="margin:0 0 8px"><h2 style="font-size:13px"><svg><use href="#i-chart"/></svg>数据统计</h2></div>
-        <div class="stats" id="statBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
+    <!-- 总览卡片 -->
+    <div class="overview-card" id="overviewCard" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP">
+      <div class="ov-head">ZHIJI · KNOWLEDGE FOREST</div>
+      <div class="ov-body">
+        <div class="ov-text">
+          <h2>让灵感扎根，让知识成林</h2>
+          <p>把零散的灵感收集起来，再通过标签、内容状态、选题、复盘与知识关联，让一个念头慢慢长成自己的知识森林。</p>
+          <div class="ov-stats" id="ovStats"></div>
+        </div>
+        <div class="ov-art"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><path d="M70 118c0-1 .5-2 1-3 2-4 4-9 4-14 0-8-3-15-8-21" stroke="#8D6E63" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M71 80c-4-6-10-10-17-12" stroke="#8D6E63" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M54 68c-6-2-12-2-18 0" stroke="#8D6E63" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="36" cy="58" rx="14" ry="10" fill="#AED581" opacity=".7"/><ellipse cx="30" cy="40" rx="11" ry="8" fill="#C5E1A5" opacity=".7"/><ellipse cx="50" cy="35" rx="9" ry="7" fill="#66BB6A" opacity=".6"/><ellipse cx="68" cy="48" rx="10" ry="7" fill="#C5E1A5" opacity=".7"/><ellipse cx="78" cy="32" rx="8" ry="6" fill="#AED581" opacity=".6"/></svg></div>
       </div>
-      <div class="today today-compact" id="todayBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
     </div>
 
-    <div class="sec-t"><h2><svg><use href="#i-mic"/></svg>录音识别</h2><span id="recCap"></span></div>
-    <div class="card rec" id="recCard">
-      <div class="tabs">
-        <button class="on" data-rtab="voice" onclick="Rec.tab('voice')">语音转文字</button>
-        <button data-rtab="text" onclick="Rec.tab('text')">直接输入</button>
+    <!-- 今日待办（单列） -->
+    <div class="today today-full" id="todayBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
+
+    <div class="sec-t"><h2><svg><use href="#i-mic"/></svg>灵感入口</h2></div>
+    <div class="card qc" id="recCard">
+      <div class="qc-head">QUICK CAPTURE · 灵感入口</div>
+      <div class="qc-title">想到什么，先说下来。</div>
+      <div class="qc-sub">不用整理，不用打字。先把灵感留下，枝集再帮你把它变成知识。</div>
+      <div class="qc-actions">
+        <button class="qc-btn" id="recBtn" onclick="Rec.toggle()"><svg><use href="#i-mic"/></svg>开始录音识别</button>
+        <button class="qc-btn qc-btn-ghost" onclick="Rec.tab('text');$('#pane-text').classList.remove('hidden');$('#pane-voice').classList.add('hidden');document.getElementById('directText').focus()"><svg><use href="#i-plus"/></svg>输入灵感</button>
       </div>
-      <div id="pane-voice">
+      <div class="qc-tip">进入枝集的第一件事，就是留下此刻的灵感</div>
+      <!-- 隐藏的原有面板（录音中/结果） -->
+      <div id="pane-voice" class="hidden">
         <div class="rec-time" id="recTime">00:00</div>
-        <div class="rec-hint" id="recHint">点下方按钮开始录音，自动转成文字</div>
-        <button class="rec-btn" id="recBtn" onclick="Rec.toggle()"><svg><use href="#i-mic"/></svg></button>
         <div class="wave" id="wave"></div>
-        <div style="display:flex;gap:8px;margin-top:12px">
+        <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-s" style="flex:1" onclick="document.getElementById('audioFile').click()"><svg><use href="#i-up"/></svg>导入音频</button>
           <button class="btn btn-s" style="flex:1" onclick="Rec.demo()"><svg><use href="#i-wand"/></svg>试试示例</button>
         </div>
@@ -477,6 +516,10 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
   <!-- ============ 树干（备忘录完整页） ============ -->
   <section class="page" id="page-trunk">
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>全部备忘录</h2><span id="memoCount"></span></div>
+    <div class="search-bar" style="margin-bottom:12px">
+      <input type="text" id="memoSearch" placeholder="搜索灵感、标签、内容…" oninput="Render.memoFull()">
+      <button class="btn btn-s" style="flex:0 0 auto;padding:0 12px" onclick="Render.memoFull()"><svg><use href="#i-search"/></svg></button>
+    </div>
     <div class="tabs" id="memoFilter" style="margin-bottom:12px">
       <button class="on" data-f="all" onclick="Render.memoFull('all')">全部</button>
       <button data-f="灵感" onclick="Render.memoFull('灵感')">灵感</button>
@@ -1202,8 +1245,6 @@ var Rec={
     var w=$('#wave'),h='';
     for(var i=0;i<22;i++)h+='<i></i>';
     w.innerHTML=h;
-    var c=$('#recCap');
-    if(c)c.textContent=this.supported()?'支持实时转写':'浏览器不支持实时转写，可导入音频或手输';
   },
   toggle:function(){this.recording?this.stop():this.start();},
   start:function(){
@@ -1223,8 +1264,8 @@ var Rec={
       self.mr.start();
       self.recording=true;self.sec=0;self.finalText='';
       $('#recBtn').classList.add('on');
-      $('#recBtn').innerHTML='<svg><use href="#i-stop"/></svg>';
-      $('#recHint').textContent='正在聆听…… 说完点一下停止';
+      $('#recBtn').innerHTML='<svg><use href="#i-stop"/></svg>停止录音';
+      $('#pane-voice').classList.remove('hidden');$('#recTime').textContent='00:00';
       self.startSR();
       self.timer=setInterval(function(){
         self.sec++;
@@ -1241,7 +1282,7 @@ var Rec={
     this.recording=false;
     clearInterval(this.timer);
     $('#recBtn').classList.remove('on');
-    $('#recBtn').innerHTML='<svg><use href="#i-mic"/></svg>';
+    $('#recBtn').innerHTML='<svg><use href="#i-mic"/></svg>开始录音识别';
     $$('#wave i').forEach(function(b){b.style.height='6px';});
     this.stopSR();
     if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
@@ -1264,7 +1305,7 @@ var Rec={
         }
         self.finalText=fin;self.interim=inter;
         var shown=fin+inter;
-        $('#recHint').textContent=shown?('已识别 '+shown.length+' 字'):'正在聆听…… 说完点一下停止';
+        if(shown)$('#recTime').textContent='已识别 '+shown.length+' 字';
       };
       this.sr.onerror=function(){};
       this.sr.start();this.srOn=true;
@@ -1386,7 +1427,7 @@ var Rec={
 
 /* ================= 渲染 ================= */
 var Render={
-  all:function(){this.today();this.notes(2);this.stats();this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();},
+  all:function(){this.overview();this.today();this.notes(2);this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();},
   header:function(){
     var p=Data.profile;
     var av=p.avatar?'<img class="avatar-sm" src="'+p.avatar+'" alt="">':'<svg style="width:36px;height:36px;vertical-align:middle"><use href="#i-logo"/></svg>';
@@ -1424,16 +1465,18 @@ var Render={
     var diff=dayDiff(n.date);
     var when=diff===0?'今天':shortDate(n.date);
     var tags=n.tags&&n.tags.length?'<div class="chips" style="margin-top:8px">'+n.tags.slice(0,4).map(function(t){return '<span class="chip">#'+esc(t)+'</span>';}).join('')+'</div>':'';
+    var desc=n.text?esc(n.text):'<span style="opacity:.5">（暂无文字稿）</span>';
     return '<div class="note st-'+esc(n.status)+'" onclick="Detail.open(\''+n.id+'\')" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP">'+
+      '<div class="dot"></div><div class="nb">'+
       '<h3>'+esc(n.title)+'</h3>'+
-      (n.text?'<div class="pv">'+esc(n.text)+'</div>':'<div class="pv" style="opacity:.6">（暂无文字稿）</div>')+
+      '<div class="pv">'+desc+'</div>'+
       '<div class="mt">'+
         '<span class="badge'+(n.status==='已发布'?' g':n.status==='写作中'?' b':'')+'">'+esc(n.status)+'</span>'+
         '<span>'+when+'</span>'+
         (n.hasAudio?'<span class="tag"><svg><use href="#i-audio"/></svg>录音</span>':'')+
         (n.imgCount?'<span class="tag"><svg><use href="#i-img"/></svg>'+n.imgCount+'</span>':'')+
         '<span>'+n.words+' 字</span>'+
-      '</div>'+ tags +'</div>';
+      '</div>'+ tags +'</div></div>';
   },
   notes:function(limit){
     var box=$('#noteList');
@@ -1452,11 +1495,19 @@ var Render={
     var box=$('#memoListFull');
     if(!box)return;
     $$('#memoFilter button').forEach(function(b){b.classList.toggle('on',b.dataset.f===f);});
-    var list=Data.notes.filter(function(n){return f==='all'||n.status===f;});
+    var kw=$('#memoSearch').value.trim().toLowerCase();
+    var list=Data.notes.filter(function(n){
+      if(f!=='all'&&n.status!==f)return false;
+      if(kw){
+        var haystack=(n.title+' '+(n.text||'')+' '+(n.tags||[]).join(' ')).toLowerCase();
+        return haystack.indexOf(kw)!==-1;
+      }
+      return true;
+    });
     list.sort(function(a,b){return a.date===b.date?(b.created||0)-(a.created||0):(a.date<b.date?1:-1);});
     $('#memoCount').textContent=list.length+' 条';
     if(!list.length){
-      box.innerHTML='<div class="card empty"><svg><use href="#i-note"/></svg><div>这个分类下还没有备忘录</div></div>';return;
+      box.innerHTML='<div class="card empty"><svg><use href="#i-note"/></svg><div>'+(kw?'没有找到匹配「'+esc(kw)+'」的备忘录':'这个分类下还没有备忘录')+'</div></div>';return;
     }
     var h='';
     list.forEach(function(n){h+=Render.fullCardHTML(n);});
@@ -1479,22 +1530,17 @@ var Render={
     },true);
   },
   clearNote:function(){},
-  stats:function(){
-    var now=new Date(),mk=now.getFullYear()+'-'+pad(now.getMonth()+1);
-    var month=Data.notes.filter(function(n){return n.date.slice(0,7)===mk;});
-    var words=Data.notes.reduce(function(s,n){return s+(n.words||0);},0);
-    // 连续天数
-    var ds={};Data.notes.forEach(function(n){ds[n.date]=1;});
-    var streak=0,d=new Date();
-    if(!ds[ymd(d)])d.setDate(d.getDate()-1);
-    while(ds[ymd(d)]){streak++;d.setDate(d.getDate()-1);}
-    var published=Data.notes.filter(function(n){return n.status==='已发布';}).length;
-    $('#statBox').innerHTML=
-      '<div class="st"><b>'+month.length+'</b><span>本月灵感</span></div>'+
-      '<div class="st"><b>'+streak+'</b><span>连续天数</span></div>'+
-      '<div class="st"><b>'+(words>9999?(words/10000).toFixed(1)+'w':words)+'</b><span>累计字数</span></div>'+
-      '<div class="st"><b>'+published+'</b><span>已发布</span></div>';
-  }
+  overview:function(){
+    var box=$('#ovStats'); if(!box)return;
+    var notes=Data.notes||[];
+    var tags={}; notes.forEach(function(n){(n.tags||[]).forEach(function(t){tags[t]=1;});});
+    var published=notes.filter(function(n){return n.status==='已发布';}).length;
+    box.innerHTML=
+      '<div class="os-item"><div class="os-num">'+notes.length+'</div><div class="os-label">灵感</div></div>'+
+      '<div class="os-item"><div class="os-num">'+Object.keys(tags).length+'</div><div class="os-label">标签</div></div>'+
+      '<div class="os-item"><div class="os-num">'+(Data.cards?Data.cards.length:0)+'</div><div class="os-label">素材</div></div>'+
+      '<div class="os-item"><div class="os-num">'+published+'</div><div class="os-label">已发布</div></div>';
+  },
 };
 
 /* ================= 热力图 ================= */
