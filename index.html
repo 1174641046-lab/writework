@@ -9,7 +9,8 @@
 <title>Bonnie 自媒体工作台</title>
 <!-- 本工作台通过 WorkBuddy 资料库能力（library skill）搭建、存储和部署 -->
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+input,textarea,select,[contenteditable]{user:text;-webkit-user-select:auto}
 :root{
   --bg:#F6F4EF; --card:#FFFFFF; --card2:#FBFAF7;
   --text:#2A2723; --text2:#7A746A; --text3:#ADA69B;
@@ -103,7 +104,7 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .chip.x{cursor:pointer}
 .chip.g{background:var(--card2);color:var(--text2);border:1px dashed var(--line)}
 
-/* ---------- 今天要处理 ---------- */
+/* ---------- 今日待办 ---------- */
 .today{background:linear-gradient(135deg,var(--green) 0%,#3E6449 100%);color:#fff;border-radius:var(--r);padding:15px 16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(79,122,91,.24)}
 .today h2{font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:10px}
 .today h2 svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2}
@@ -117,14 +118,15 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .ti .go{flex:none;background:rgba(255,255,255,.9);color:#3E6449;border:none;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px;font-family:inherit}
 .ti.od .go{background:#fff;color:#B0402E}
 
-/* 首页两列卡片：数据统计 + 今天要处理 */
-.top-row{display:flex;gap:10px;margin-bottom:14px}
-.today-compact{margin:0;flex:1;min-width:0;padding:12px}
+/* 首页两列卡片：数据统计 + 今日待办 */
+.top-row{display:flex;gap:10px;margin-bottom:14px;align-items:stretch}
+.today-compact{margin:0;flex:1;min-width:0;padding:12px;display:flex;flex-direction:column}
 .today-compact h2{font-size:13px;margin-bottom:8px}
 .today-compact .n{margin-left:0;font-size:11.5px;padding:6px 8px}
 .today-compact .ti{padding:6px 8px;margin-bottom:4px}
 .today-compact .ti .bd b{font-size:12.5px}
 .today-compact .ti .bd em{font-size:10.5px}
+.today-compact .n{flex:1;display:flex;align-items:center}
 /* 通知栏 / 列表滑动项 */
 .swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px;contain:layout paint}
 .swipe:last-child{margin-bottom:0}
@@ -360,7 +362,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
   <!-- ============ 树根（首页） ============ -->
   <section class="page on" id="page-root">
-    <!-- 两列卡片：数据统计 + 今天要处理 -->
+    <!-- 两列卡片：数据统计 + 今日待办 -->
     <div class="top-row">
       <div class="card" style="flex:1;min-width:0;padding:12px">
         <div class="sec-t" style="margin:0 0 8px"><h2 style="font-size:13px"><svg><use href="#i-chart"/></svg>数据统计</h2></div>
@@ -412,6 +414,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <div class="heat-hd">
         <b id="heatTitle">—</b>
         <div class="hnav">
+          <button onclick="Heat.goToday()" title="回到今天" style="font-size:11px;padding:0 8px;width:auto;min-width:30px">今天</button>
           <button onclick="Heat.move(-1)"><svg><use href="#i-back"/></svg></button>
           <span id="heatMonth">—</span>
           <button onclick="Heat.move(1)"><svg style="transform:rotate(180deg)"><use href="#i-back"/></svg></button>
@@ -543,6 +546,10 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <button class="btn btn-s" onclick="document.getElementById('impFile').click()"><svg><use href="#i-up"/></svg>导入</button>
       </div>
       <input type="file" id="impFile" accept="application/json,.json" class="hidden" onchange="Me.import(this)">
+      <div class="row" onclick="Me.openTrash()" style="cursor:pointer">
+        <div class="lb"><b>回收站</b><span id="trashCnt">恢复已删除的备忘录</span></div>
+        <svg style="width:18px;height:18px;stroke:var(--text3);fill:none;stroke-width:2"><use href="#i-back"/></svg>
+      </div>
       <div class="row">
         <div class="lb"><b>清空全部数据</b><span>本地与云端记录都会清除</span></div>
         <button class="btn btn-s btn-d" onclick="Me.clearAll()"><svg><use href="#i-trash"/></svg>清空</button>
@@ -551,7 +558,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.5.1</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.6.0</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -605,7 +612,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     <div class="imgs" id="dtImgs" style="margin-bottom:18px"></div>
     <input type="file" id="dtImgFile" accept="image/*" multiple class="hidden" onchange="Detail.pickImgs(this)">
     <div class="fl-row" style="margin-top:6px"><label class="fl">文字稿</label><button class="btn btn-s btn-o" onclick="Detail.batchReplace()"><svg><use href="#i-wand"/></svg>批量替换</button></div>
-    <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()"></textarea>
+    <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()" onclick="Detail.focusAtCursor(event)"></textarea>
     <div id="dtMeta" class="muted" style="margin-top:14px;font-size:11.5px;text-align:center"></div>
   </div>
   <div class="sheet-ft">
@@ -740,18 +747,21 @@ var IDB=(function(){
 
 /* ================= 数据模型 ================= */
 var Data={
-  notes:[], cards:[], profile:{}, settings:{theme:'auto'},
+  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto'},
   load:function(){
     this.notes=LS.get('notes',[]);
     this.cards=LS.get('cards',[]);
+    this.trash=LS.get('trash',[]);
     this.profile=LS.get('profile',{name:'Bonnie',avatar:'',sub:'自媒体创作者'});
     this.settings=LS.get('settings',{theme:'auto'});
   },
   saveNotes:function(){LS.set('notes',this.notes);},
   saveCards:function(){LS.set('cards',this.cards);},
+  saveTrash:function(){LS.set('trash',this.trash);},
   saveProfile:function(){LS.set('profile',this.profile);},
   saveSettings:function(){LS.set('settings',this.settings);},
-  noteById:function(id){for(var i=0;i<this.notes.length;i++)if(this.notes[i].id===id)return this.notes[i];return null;}
+  noteById:function(id){for(var i=0;i<this.notes.length;i++)if(this.notes[i].id===id)return this.notes[i];return null;},
+  trashById:function(id){for(var i=0;i<this.trash.length;i++)if(this.trash[i].id===id)return this.trash[i];return null;}
 };
 
 /* ================= 中文关键词提取：词典匹配 + 统计补充 ================= */
@@ -1249,7 +1259,7 @@ var Render={
       else if(n.status==='灵感'&&diff===1)items.push({n:n,od:false,why:'昨天的灵感，趁热写'});
     });
     items.sort(function(a,b){return (b.od?1:0)-(a.od?1:0);});
-    var h='<h2><svg><use href="#i-clock"/></svg>今天要处理</h2>';
+    var h='<h2><svg><use href="#i-clock"/></svg>今日待办</h2>';
     if(todayCnt===0&&!items.length)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
     if(!items.length&&todayCnt>0)h+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
     items.slice(0,4).forEach(function(it){
@@ -1306,10 +1316,13 @@ var Render={
   delMemo:function(id){
     var n=Data.noteById(id);if(!n)return;
     var self=this;
-    confirmDlg('删除备忘录','确定删除「'+esc(n.title)+'」？录音和配图也会一起删掉，不可恢复。','删除',function(){
+    confirmDlg('删除备忘录','确定删除「'+esc(n.title)+'」？可从设置→数据管理→回收站中恢复。','删除',function(){
       Data.notes=Data.notes.filter(function(x){return x.id!==id;});
-      Data.saveNotes();IDB.del('audio',id);IDB.del('images',id);Cloud.removeNote(n);
-      self.memoFull();self.notes();toast('已删除');
+      n._deletedAt=Date.now();
+      Data.trash.unshift(n);
+      Data.saveNotes();Data.saveTrash();
+      Cloud.removeNote(n);
+      self.memoFull();self.notes();toast('已移入回收站');
     },true);
   },
   clearNote:function(){},
@@ -1335,6 +1348,7 @@ var Render={
 var Heat={
   y:new Date().getFullYear(), m:new Date().getMonth(),
   move:function(d){this.m+=d;if(this.m<0){this.m=11;this.y--;}if(this.m>11){this.m=0;this.y++;}this.render();},
+  goToday:function(){var n=new Date();this.y=n.getFullYear();this.m=n.getMonth();this.render();},
   render:function(){
     var map={};
     Data.notes.forEach(function(n){map[n.date]=(map[n.date]||0)+1;});
@@ -1717,6 +1731,18 @@ var Detail={
     closeMask();this.onTitleInput();toast('已应用优化标题');
   },
   autoGrow:function(){var t=$('#dtText');if(!t)return;t.style.height='auto';t.style.height=(t.scrollHeight+100)+'px';},
+  focusAtCursor:function(e){
+    var t=e.target;
+    t.focus();
+    var r=t.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    var lineH=parseFloat(getComputedStyle(t).lineHeight)||20;
+    var col=Math.round(x/parseFloat(getComputedStyle(t).fontSize||'15'));
+    var lines=t.value.split('\n');
+    var lineIdx=Math.max(0,Math.min(Math.floor(y/lineH),lines.length-1));
+    var pos=0;for(var i=0;i<lineIdx;i++)pos+=lines[i].length+1;
+    pos=Math.min(pos+col,t.value.length);
+    if(t.setSelectionRange)t.setSelectionRange(pos,pos);
+  },
   batchReplace:function(){
     $('#dlg').innerHTML='<h4>批量替换文字</h4>'+
       '<label class="fl">查找</label><input type="text" id="brFind" placeholder="要替换的词">'+
@@ -1874,12 +1900,13 @@ var Detail={
   },
   confirmDel:function(){
     var n=this.cur,self=this;
-    confirmDlg('删除备忘录','确定删除「'+esc(n.title)+'」？录音和配图也会一起删掉，不可恢复。','删除',function(){
+    confirmDlg('删除备忘录','确定删除「'+esc(n.title)+'」？可从设置→数据管理→回收站中恢复。','删除',function(){
       Data.notes=Data.notes.filter(function(x){return x.id!==n.id;});
-      Data.saveNotes();
-      IDB.del('audio',n.id);IDB.del('images',n.id);
+      n._deletedAt=Date.now();
+      Data.trash.unshift(n);
+      Data.saveNotes();Data.saveTrash();
       Cloud.removeNote(n);
-      Render.all();self._close();toast('已删除');
+      Render.all();self._close();toast('已移入回收站');
     },true);
   }
 };
@@ -1910,6 +1937,8 @@ var Me={
     $('#meName').value=p.name||'';
     $('#meSub').textContent=p.sub||'自媒体创作者';
     $$('#themeSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.t===Data.settings.theme);});
+    var tc=Data.trash.length;
+    $('#trashCnt').textContent=tc?'已删除 '+tc+' 条备忘录':'回收站为空';
   },
   saveName:function(v){Data.profile.name=v.trim()||'Bonnie';Data.saveProfile();Render.header();this.render();},
   pickAvatar:function(inp){
@@ -1933,7 +1962,7 @@ var Me={
   },
   export:function(){
     var payload={app:'bonnie-studio',version:1,exportedAt:new Date().toISOString(),
-      notes:Data.notes,cards:Data.cards,profile:Data.profile,settings:Data.settings};
+      notes:Data.notes,cards:Data.cards,trash:Data.trash,profile:Data.profile,settings:Data.settings};
     var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
@@ -1950,10 +1979,10 @@ var Me={
         var d=JSON.parse(e.target.result);
         if(!d||!d.notes)throw 0;
         confirmDlg('导入数据','将用备份中的 '+d.notes.length+' 条备忘录、'+(d.cards||[]).length+' 条素材覆盖当前数据，确定继续？','导入',function(){
-          Data.notes=d.notes||[];Data.cards=d.cards||[];
+          Data.notes=d.notes||[];Data.cards=d.cards||[];Data.trash=d.trash||[];
           if(d.profile)Data.profile=d.profile;
           if(d.settings)Data.settings=d.settings;
-          Data.saveNotes();Data.saveCards();Data.saveProfile();Data.saveSettings();
+          Data.saveNotes();Data.saveCards();Data.saveTrash();Data.saveProfile();Data.saveSettings();
           Me.applyTheme();Me.render();Render.all();toast('导入完成');
         });
       }catch(err){toast('文件格式不正确');}
@@ -1963,9 +1992,51 @@ var Me={
   clearAll:function(){
     confirmDlg('清空全部数据','这会删除本机所有备忘录、素材和录音，云端记录也会标记删除。此操作不可恢复，建议先导出备份。','确认清空',function(){
       Data.notes.forEach(function(n){IDB.del('audio',n.id);IDB.del('images',n.id);Cloud.removeNote(n);});
-      Data.notes=[];Data.cards=[];
-      Data.saveNotes();Data.saveCards();
+      Data.trash.forEach(function(n){IDB.del('audio',n.id);IDB.del('images',n.id);});
+      Data.notes=[];Data.cards=[];Data.trash=[];
+      Data.saveNotes();Data.saveCards();Data.saveTrash();
       Render.all();Me.render();toast('已清空');
+    },true);
+  },
+  openTrash:function(){
+    var list=Data.trash;
+    var cnt=list.length;
+    $('#trashCnt').textContent=cnt?'已删除 '+cnt+' 条备忘录':'回收站为空';
+    if(!cnt){toast('回收站是空的');return;}
+    var h='<h4 style="margin-bottom:12px">回收站（'+cnt+' 条）</h4>';
+    h+='<div style="max-height:50vh;overflow-y:auto">';
+    list.forEach(function(n){
+      var d=n._deletedAt?new Date(n._deletedAt):null;
+      var ds=d?d.getMonth()+1+'/'+d.getDate()+' '+pad(d.getHours())+':'+pad(d.getMinutes()):'';
+      h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">'+
+        '<div style="flex:1;min-width:0">'+
+          '<b style="font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(n.title)+'</b>'+
+          '<span style="font-size:11px;color:var(--text3)">'+(n.status||'灵感')+' · 删除于 '+ds+'</span>'+
+        '</div>'+
+        '<button class="btn btn-s btn-o" onclick="Me.restoreNote(\''+n.id+'\')" style="flex:none;font-size:11.5px;padding:0 10px">恢复</button>'+
+        '</div>';
+    });
+    h+='</div>';
+    h+='<div style="display:flex;gap:8px;margin-top:14px">'+
+      '<button class="btn" onclick="closeMask()">关闭</button>'+
+      '<button class="btn btn-s btn-d" onclick="Me.purgeTrash()" style="margin-left:auto">清空回收站</button></div>';
+    $('#dlg').innerHTML=h;
+    $('#mask').classList.add('on');
+  },
+  restoreNote:function(id){
+    var n=Data.trashById(id);if(!n)return;
+    delete n._deletedAt;
+    Data.trash=Data.trash.filter(function(x){return x.id!==id;});
+    Data.notes.unshift(n);
+    Data.saveNotes();Data.saveTrash();
+    Render.all();this.openTrash();toast('已恢复「'+esc(n.title)+'」');
+  },
+  purgeTrash:function(){
+    if(!Data.trash.length){toast('回收站是空的');return;}
+    confirmDlg('清空回收站','永久删除 '+Data.trash.length+' 条备忘录？此操作不可恢复。','永久删除',function(){
+      Data.trash.forEach(function(n){IDB.del('audio',n.id);IDB.del('images',n.id);});
+      Data.trash=[];Data.saveTrash();
+      Me.openTrash();Render.all();toast('回收站已清空');
     },true);
   }
 };
