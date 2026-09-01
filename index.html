@@ -437,7 +437,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-o" style="flex:1" onclick="Leaf.openSearch()"><svg><use href="#i-link"/></svg>去<span id="leafPfName">小红书</span>搜</button>
-        <button id="btnDouyinApp" class="btn btn-p hidden" style="flex:1" onclick="Leaf.openInApp()"><svg><use href="#i-phone"/></svg>在抖音打开</button>
+        <button id="btnAppOpen" class="btn btn-p hidden" style="flex:1" onclick="Leaf.openInApp()"><svg><use href="#i-phone"/></svg>在<span id="leafAppName">抖音</span>打开</button>
         <button class="btn" style="flex:1" onclick="Leaf.togglePaste()"><svg><use href="#i-plus"/></svg>粘贴素材</button>
       </div>
       <div id="pasteBox" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
@@ -531,7 +531,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.3.2</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.3.3</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -598,6 +598,12 @@ var $ = function(s){return document.querySelector(s);};
 var $$ = function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function uid(){return 'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function punctuate(s){
+  s=(s||'').replace(/\s+/g,'');
+  if(!s)return s;
+  if(!/[。！？.!?]$/.test(s))s+='。';
+  return s;
+}
 function pad(n){return n<10?'0'+n:''+n;}
 function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function today(){return ymd(new Date());}
@@ -954,7 +960,7 @@ var Nav={
 /* ================= 录音识别 ================= */
 var Rec={
   mr:null,stream:null,chunks:[],timer:null,sec:0,recording:false,
-  sr:null,srOn:false,finalText:'',
+  sr:null,srOn:false,finalText:'',interim:'',
   draft:null, /* {text,audio:Blob|null,audioUrl,title,tags} */
   tab:function(t){
     $$('.tabs button[data-rtab]').forEach(function(b){b.classList.toggle('on',b.dataset.rtab===t);});
@@ -1021,10 +1027,14 @@ var Rec={
       this.sr=new SR();
       this.sr.lang='zh-CN';this.sr.continuous=true;this.sr.interimResults=true;
       this.sr.onresult=function(ev){
-        var txt='';
-        for(var i=0;i<ev.results.length;i++)if(ev.results[i].isFinal)txt+=ev.results[i][0].transcript;
-        self.finalText=txt;
-        $('#recHint').textContent=txt?('已识别 '+txt.length+' 字'):'正在聆听…… 说完点一下停止';
+        var fin='',inter='';
+        for(var i=0;i<ev.results.length;i++){
+          var t=ev.results[i][0].transcript;
+          if(ev.results[i].isFinal)fin+=t; else inter+=t;
+        }
+        self.finalText=fin;self.interim=inter;
+        var shown=fin+inter;
+        $('#recHint').textContent=shown?('已识别 '+shown.length+' 字'):'正在聆听…… 说完点一下停止';
       };
       this.sr.onerror=function(){};
       this.sr.start();this.srOn=true;
@@ -1032,7 +1042,7 @@ var Rec={
   },
   stopSR:function(){if(this.sr&&this.srOn){try{this.sr.stop();}catch(e){}this.srOn=false;}},
   finish:function(blob){
-    var text=(this.finalText||'').trim();
+    var text=punctuate((this.finalText||this.interim||'').trim());
     var url=blob?URL.createObjectURL(blob):'';
     if(!text&&!blob){toast('没有录到内容');return;}
     this.draft={text:text,audio:blob,audioUrl:url,title:'',tags:[]};
@@ -1157,12 +1167,13 @@ var Render={
     $('#greet').textContent=(p.name||'Bonnie')+' · '+(h<6?'夜深了':h<11?'早上好':h<14?'中午好':h<18?'下午好':'晚上好');
   },
   today:function(){
-    var box=$('#todayBox');
-    if(todayClearedDate===today()){box.style.display='none';return;}
+    var box=$('#todayBox'); if(!box)return;
     box.style.display='';
-    var items=[],now=today();
+    var now=today();
     var todayCnt=Data.notes.filter(function(n){return n.date===now;}).length;
+    var items=[];
     Data.notes.forEach(function(n){
+      if(n.cleared)return;
       var diff=dayDiff(n.date);
       if(n.status==='灵感'&&diff>=2)items.push({n:n,od:true,why:'躺了 '+diff+' 天还没动笔'});
       else if(n.status==='写作中'&&diff>=5)items.push({n:n,od:true,why:'写了 '+diff+' 天还没发'});
@@ -1170,23 +1181,23 @@ var Render={
       else if(n.status==='灵感'&&diff===1)items.push({n:n,od:false,why:'昨天的灵感，趁热写'});
     });
     items.sort(function(a,b){return (b.od?1:0)-(a.od?1:0);});
-    var inner='<h2><svg><use href="#i-clock"/></svg>今天要处理</h2>';
-    if(todayCnt===0&&!items.length)inner+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
-    if(!items.length&&todayCnt>0)inner+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
+    var h='<h2><svg><use href="#i-clock"/></svg>今天要处理</h2>';
+    if(todayCnt===0&&!items.length)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
+    if(!items.length&&todayCnt>0)h+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
     items.slice(0,4).forEach(function(it){
-      inner+='<div class="ti'+(it.od?' od':'')+'"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div>'+
-        '<button class="go" onclick="Detail.open(\''+it.n.id+'\')">处理</button></div>';
+      h+='<div class="swipe ni" data-nid="'+it.n.id+'">'+
+        '<div class="sw-del right" onclick="Render.clearNoteConfirm(\''+it.n.id+'\')">清除</div>'+
+        '<div class="ti'+(it.od?' od':'')+'" onclick="Detail.open(\''+it.n.id+'\')"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div></div></div>';
     });
-    box.innerHTML='<div class="swipe today-sw">'+
-      '<div class="sw-del right" onclick="Render.clearToday()">清除</div>'+
-      '<div class="today-inner">'+inner+'</div></div>';
-    var sw=$('#todayBox .today-sw');
-    makeSwipe(sw,{dir:'left',reveal:84,full:200,onFull:function(){Render.clearToday();},onReveal:function(){}});
+    box.innerHTML=h;
+    $$('#todayBox .swipe.ni').forEach(function(w){var id=w.dataset.nid;makeSwipe(w,{dir:'left',reveal:48,full:9999,onReveal:function(){},onFull:function(){}});});
   },
-  clearToday:function(){
-    todayClearedDate=today();LS.set('todayClearedDate',todayClearedDate);
-    var box=$('#todayBox');if(box){box.style.display='none';box.innerHTML='';}
-    toast('已清除今日通知');
+  clearNoteConfirm:function(id){
+    var n=Data.noteById(id);if(!n)return;
+    var self=this;
+    confirmDlg('清除通知','不再提醒「'+esc(n.title)+'」这条？','清除',function(){
+      n.cleared=true;Data.saveNotes();self.today();toast('已清除');
+    },true);
   },
   noteCardHTML:function(n,home){
     var diff=dayDiff(n.date);
@@ -1243,7 +1254,7 @@ var Render={
       self.memoFull();self.notes();toast('已删除');
     },true);
   },
-  clearNote:function(){this.clearToday();},
+  clearNote:function(id){this.clearNoteConfirm(id);},
   stats:function(){
     var now=new Date(),mk=now.getFullYear()+'-'+pad(now.getMonth()+1);
     var month=Data.notes.filter(function(n){return n.date.slice(0,7)===mk;});
@@ -1341,8 +1352,10 @@ var Leaf={
   setPf:function(pf){
     this.pf=pf;
     $$('#leafPfSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.pf===pf);});
-    $('#leafPfName').textContent=(pf==='all'?'小红书':pf);
-    var da=$('#btnDouyinApp'); if(da)da.classList.toggle('hidden',pf!=='抖音');
+    var label=(pf==='all'?'小红书':pf);
+    $('#leafPfName').textContent=label;
+    var ba=$('#btnAppOpen');
+    if(ba){ba.classList.remove('hidden');$('#leafAppName').textContent=label;}
     this.render();
   },
   kwChips:function(){
@@ -1369,13 +1382,18 @@ var Leaf={
   },
   openInApp:function(){
     var kw=$('#leafKw').value.trim();
-    var scheme='snssdk1128://'+(kw?('search?keyword='+encodeURIComponent(kw)):'');
-    var web='https://www.douyin.com/search/'+encodeURIComponent(kw||'自媒体');
+    var pf=this.pf==='all'?'小红书':this.pf;
+    var enc=encodeURIComponent(kw||'自媒体');
+    var scheme, web;
+    if(pf==='抖音'){ scheme='snssdk1128://'+(kw?('search?keyword='+enc):''); web='https://www.douyin.com/search/'+enc; }
+    else if(pf==='小红书'){ scheme='xhsdiscover://search?keyword='+enc; web='https://www.xiaohongshu.com/search?keyword='+enc; }
+    else if(pf==='B站'){ scheme='bilibili://search?keyword='+enc; web='https://search.bilibili.com/all?keyword='+enc; }
+    else { toast('视频号请在微信内搜索，复制分享链接后粘贴回来'); return; }
     var t=Date.now();
     var fb=setTimeout(function(){ if(!document.hidden&&Date.now()-t<2400) window.open(web,'_blank','noopener'); },1600);
     document.addEventListener('visibilitychange',function v(){ if(document.hidden) clearTimeout(fb); document.removeEventListener('visibilitychange',v); });
     var a=document.createElement('a'); a.href=scheme; a.style.display='none'; document.body.appendChild(a); a.click(); a.remove();
-    toast('正在唤起抖音 App…');
+    toast('正在唤起'+pf+' App…');
   },
   togglePaste:function(){$('#pasteBox').classList.toggle('hidden');},
   parsePaste:function(){
