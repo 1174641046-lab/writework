@@ -116,6 +116,14 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .ti .bd em{font-style:normal;font-size:11px;opacity:.85}
 .ti .go{flex:none;background:rgba(255,255,255,.9);color:#3E6449;border:none;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px;font-family:inherit}
 .ti.od .go{background:#fff;color:#B0402E}
+/* 通知栏 / 列表滑动项 */
+.swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px}
+.swipe:last-child{margin-bottom:0}
+.sw-del{position:absolute;left:0;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:13px;font-weight:600}
+.swipe .ti,.swipe .note{position:relative;z-index:1;transition:transform .2s;will-change:transform;touch-action:pan-y;margin-bottom:0}
+.note-count{cursor:pointer;display:inline-flex;align-items:center;gap:2px;color:var(--text2);font-size:13px}
+.note-count svg{width:16px;height:16px;stroke:var(--green)}
+.fl-row{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px 3px}
 
 /* ---------- 录音区 ---------- */
 .rec{text-align:center;padding:20px 16px 16px}
@@ -516,7 +524,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.0.0</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.1.0</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -551,8 +559,8 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <input type="text" id="dtTagIn" placeholder="添加标签" style="flex:1" onkeydown="if(event.key==='Enter')Detail.addTag()">
       <button class="btn btn-s" onclick="Detail.addTag()">添加</button>
     </div>
-    <label class="fl">文字稿</label>
-    <textarea id="dtText" style="min-height:180px;margin-bottom:12px" oninput="Detail.markDirty()"></textarea>
+    <div class="fl-row"><label class="fl">文字稿</label><button class="btn btn-s btn-o" onclick="Detail.batchReplace()"><svg><use href="#i-wand"/></svg>批量替换</button></div>
+    <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()"></textarea>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <label class="fl" style="margin:0">配图 <span id="dtImgCount" style="font-weight:400"></span></label>
       <button class="btn btn-s btn-o" onclick="Detail.regen()"><svg><use href="#i-wand"/></svg>重拟标题</button>
@@ -597,6 +605,26 @@ function confirmDlg(title,msg,okText,onOk,danger){
   $('#dlgOk').onclick=function(){closeMask();onOk();};
 }
 function closeMask(){$('#mask').classList.remove('on');}
+function makeSwipe(wrap,opt){
+  var content=wrap.querySelector('.ti')||wrap.querySelector('.note');
+  var btnW=opt.btnW||72, sx,sy,dx=0,active=false,moved=false,sw=false;
+  wrap.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;active=true;moved=false;sw=false;content.style.transition='';},{passive:true});
+  wrap.addEventListener('touchmove',function(e){
+    if(!active)return;
+    var t=e.touches[0],cx=t.clientX-sx,cy=t.clientY-sy;
+    if(!moved){if(Math.abs(cx)>6&&Math.abs(cx)>Math.abs(cy))moved=true;else if(Math.abs(cy)>6&&Math.abs(cx)<=Math.abs(cy)){active=false;return;}}
+    if(moved){if(cx>0){if(e.cancelable)e.preventDefault();dx=Math.min(cx,btnW+24);content.style.transform='translateX('+dx+'px)';}else{dx=0;content.style.transform='translateX(0)';}}
+  },{passive:false});
+  wrap.addEventListener('touchend',function(){
+    if(!active)return;active=false;
+    if(!moved)return;
+    content.style.transition='transform .2s';
+    if(dx>=opt.full){content.style.transform='translateX(0)';opt.onFull&&opt.onFull();}
+    else if(dx>=opt.reveal){content.style.transform='translateX('+btnW+'px)';opt.onReveal&&opt.onReveal();}
+    else{content.style.transform='translateX(0)';sw=true;}
+  });
+  wrap.addEventListener('click',function(e){if(sw){e.stopPropagation();e.preventDefault();sw=false;}},true);
+}
 $('#mask').addEventListener('click',function(e){if(e.target===this)closeMask();});
 
 /* ================= 本地存储 ================= */
@@ -1105,8 +1133,9 @@ var Render={
   },
   today:function(){
     var items=[],now=today();
-    var todayCnt=Data.notes.filter(function(n){return n.date===now;}).length;
+    var todayCnt=Data.notes.filter(function(n){return n.date===now&&!n.cleared;}).length;
     Data.notes.forEach(function(n){
+      if(n.cleared)return;
       var diff=dayDiff(n.date);
       if(n.status==='灵感'&&diff>=2)items.push({n:n,od:true,why:'躺了 '+diff+' 天还没动笔'});
       else if(n.status==='写作中'&&diff>=5)items.push({n:n,od:true,why:'写了 '+diff+' 天还没发'});
@@ -1115,13 +1144,16 @@ var Render={
     });
     items.sort(function(a,b){return (b.od?1:0)-(a.od?1:0);});
     var h='<h2><svg><use href="#i-clock"/></svg>今天要处理</h2>';
-    if(todayCnt===0)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
+    if(todayCnt===0&&!items.length)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
     if(!items.length&&todayCnt>0)h+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
     items.slice(0,4).forEach(function(it){
-      h+='<div class="ti'+(it.od?' od':'')+'"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div>'+
-        '<button class="go" onclick="Detail.open(\''+it.n.id+'\')">处理</button></div>';
+      h+='<div class="swipe ni" data-nid="'+it.n.id+'">'+
+        '<div class="sw-del" onclick="Render.clearNote(\''+it.n.id+'\')">清除</div>'+
+        '<div class="ti'+(it.od?' od':'')+'"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div>'+
+        '<button class="go" onclick="Detail.open(\''+it.n.id+'\')">处理</button></div></div>';
     });
-    $('#todayBox').innerHTML=h;
+    var box=$('#todayBox');box.innerHTML=h;
+    $$('#todayBox .swipe.ni').forEach(function(w){var id=w.dataset.nid;makeSwipe(w,{reveal:48,full:140,onFull:function(){Render.clearNote(id);},onReveal:function(){}});});
   },
   noteCardHTML:function(n,home){
     var diff=dayDiff(n.date);
@@ -1140,7 +1172,7 @@ var Render={
   },
   notes:function(limit){
     var box=$('#noteList');
-    $('#noteCount').innerHTML='<span class="note-count" onclick="Nav.to(\'trunk\')">'+Data.notes.length+' 条<svg><use href="#i-back" style="transform:rotate(180deg)"/></svg></span>';
+    $('#noteCount').innerHTML='<span class="note-count" onclick="Nav.to(\'trunk\')"><svg><use href="#i-back" style="transform:rotate(180deg)"/></svg></span>';
     if(!Data.notes.length){
       box.innerHTML='<div class="card empty"><svg><use href="#i-note"/></svg><div>还没有备忘录<br>录一段试试</div></div>';return;
     }
@@ -1162,8 +1194,25 @@ var Render={
       box.innerHTML='<div class="card empty"><svg><use href="#i-note"/></svg><div>这个分类下还没有备忘录</div></div>';return;
     }
     var h='';
-    list.forEach(function(n){h+=Render.noteCardHTML(n, false);});
+    list.forEach(function(n){h+=Render.fullCardHTML(n);});
     box.innerHTML=h;
+    $$('#memoListFull .swipe').forEach(function(w){var id=w.dataset.nid;makeSwipe(w,{reveal:48,full:9999,onReveal:function(){},onFull:function(){}});});
+  },
+  fullCardHTML:function(n){
+    return '<div class="swipe" data-nid="'+n.id+'"><div class="sw-del" onclick="Render.delMemo(\''+n.id+'\')">删除</div>'+Render.noteCardHTML(n,false)+'</div>';
+  },
+  delMemo:function(id){
+    var n=Data.noteById(id);if(!n)return;
+    var self=this;
+    confirmDlg('删除备忘录','确定删除「'+esc(n.title)+'」？录音和配图也会一起删掉，不可恢复。','删除',function(){
+      Data.notes=Data.notes.filter(function(x){return x.id!==id;});
+      Data.saveNotes();IDB.del('audio',id);IDB.del('images',id);Cloud.removeNote(n);
+      self.memoFull();self.notes();toast('已删除');
+    },true);
+  },
+  clearNote:function(id){
+    var n=Data.noteById(id);if(!n)return;
+    n.cleared=true;Data.saveNotes();this.today();toast('已清除');
   },
   stats:function(){
     var now=new Date(),mk=now.getFullYear()+'-'+pad(now.getMonth()+1);
@@ -1511,13 +1560,32 @@ var Detail={
     this.cur=null;this.dirty=false;
   },
   markDirty:function(){this.dirty=true;},
+  autoGrow:function(){var t=$('#dtText');if(!t)return;t.style.height='auto';t.style.height=t.scrollHeight+'px';},
+  batchReplace:function(){
+    $('#dlg').innerHTML='<h4>批量替换文字</h4>'+
+      '<label class="fl">查找</label><input type="text" id="brFind" placeholder="要替换的词">'+
+      '<label class="fl" style="margin-top:10px">替换为</label><input type="text" id="brRep" placeholder="新内容（留空＝删除）">'+
+      '<div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">取消</button>'+
+      '<button class="btn btn-p" id="brOk">替换全部</button></div>';
+    $('#mask').classList.add('on');
+    setTimeout(function(){$('#brFind').focus();},50);
+    $('#brOk').onclick=function(){
+      var f=$('#brFind').value,r=$('#brRep').value;
+      if(!f){toast('请输入查找内容');return;}
+      var t=$('#dtText'),txt=t.value,idx=0,cnt=0;
+      while((idx=txt.indexOf(f,idx))!==-1){cnt++;idx+=f.length;}
+      t.value=txt.split(f).join(r);
+      closeMask();Detail.markDirty();Detail.autoGrow();
+      toast(cnt?('已替换 '+cnt+' 处'):'未找到该内容');
+    };
+  },
   paint:function(){
     var n=this.cur;if(!n)return;
     if(!n.text)n.text='';
     if(!n.tags)n.tags=[];
     $('#dtTitle').textContent=n.title;
     $('#dtTitleIn').value=n.title;
-    $('#dtText').value=n.text;
+    $('#dtText').value=n.text;this.autoGrow();
     this.paintTags();
     this.paintAudio();
     this.paintImgs();
