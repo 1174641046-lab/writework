@@ -332,6 +332,35 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 <svg style="display:none" aria-hidden="true"><defs>
 <symbol id="i-trunk" viewBox="0 0 24 24"><path d="M12 22V9M12 9 8 3M12 9l4-6M12 14l-3-3M12 17l3.5-3.5"/></symbol>
 <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M4 20c0-8 5-13 16-14 1 10-4 15-11 15H4z"/><path d="M4 20c4-5 7-8 12-10"/></symbol>
+<symbol id="i-logo" viewBox="0 0 120 120">
+  <!-- 主干 -->
+  <path d="M22 98 Q30 70 55 52 Q80 34 105 18" stroke="#2E7D32" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- 左分支 -->
+  <path d="M38 68 Q28 58 18 52" stroke="#2E7D32" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M32 78 Q22 82 12 80" stroke="#2E7D32" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- 中左分支 -->
+  <path d="M52 58 Q48 44 42 32" stroke="#2E7D32" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <!-- 中右分支 -->
+  <path d="M72 42 Q78 30 86 20" stroke="#2E7D32" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M82 46 Q94 44 106 42" stroke="#2E7D32" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- 右下分支 -->
+  <path d="M62 56 Q72 68 84 76" stroke="#2E7D32" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- 深绿圆点 -->
+  <circle cx="18" cy="50" r="7" fill="#2E7D32"/>
+  <circle cx="42" cy="28" r="7.5" fill="#2E7D32"/>
+  <circle cx="86" cy="78" r="7" fill="#2E7D32"/>
+  <!-- 中绿圆点 -->
+  <circle cx="12" cy="78" r="6.5" fill="#66BB6A"/>
+  <circle cx="64" cy="36" r="6.5" fill="#66BB6A"/>
+  <circle cx="106" cy="40" r="7" fill="#66BB6A"/>
+  <!-- 浅绿圆点 -->
+  <circle cx="28" cy="44" r="6.5" fill="#C5E1A5"/>
+  <circle cx="86" cy="18" r="7" fill="#C5E1A5"/>
+  <circle cx="74" cy="66" r="6.5" fill="#C5E1A5"/>
+  <circle cx="96" cy="26" r="7.5" fill="#C5E1A5"/>
+  <!-- 一片叶子 -->
+  <ellipse cx="92" cy="30" rx="9" ry="5" fill="#AED581" transform="rotate(25 92 30)"/>
+</symbol>
 <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="18" r="2.4"/><circle cx="19" cy="18" r="2.4"/><path d="M12 7.4v4.3M10.4 13.4 6.6 16M13.6 13.4 17.4 16"/></symbol>
 <symbol id="i-forest" viewBox="0 0 24 24"><path d="M12 22c-1-4-1-8 0-12M12 10c-3 0-6-2-8-5M12 10c3 0 6-2 8-5M12 22c1.5-3 4-5 7-6M12 22c-1.5-3-4-5-7-6" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
 <symbol id="i-me" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.2-3.8 4-5.6 7.5-5.6S18.3 16.2 19.5 20"/></symbol>
@@ -368,7 +397,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
   <header class="topbar">
     <div id="topAvatar"></div>
     <div class="brand">
-      <h1><svg class="ico" style="stroke:var(--green);width:20px;height:20px"><use href="#i-leaf"/></svg><span id="greet">Bonnie 工作台</span></h1>
+      <h1><svg class="ico" style="width:28px;height:28px;vertical-align:middle"><use href="#i-logo"/></svg><span id="greet">枝集</span></h1>
       <p id="todayStr">—</p>
     </div>
     <div class="sync-dot" id="syncDot" onclick="Cloud.manualSync()"><i></i><span id="syncTxt">本地</span></div>
@@ -650,7 +679,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.7.3</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>枝集</span></div><b style="color:var(--green);font-size:14px">v1.7.4</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1355,12 +1384,12 @@ var Render={
   all:function(){this.today();this.notes(2);this.stats();this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();},
   header:function(){
     var p=Data.profile;
-    var av=p.avatar?'<img class="avatar-sm" src="'+p.avatar+'" alt="">':'<div class="avatar-sm-fb">'+esc((p.name||'B').slice(0,1))+'</div>';
+    var av=p.avatar?'<img class="avatar-sm" src="'+p.avatar+'" alt="">':'<svg style="width:36px;height:36px;vertical-align:middle"><use href="#i-logo"/></svg>';
     $('#topAvatar').innerHTML=av;
     var d=new Date(),wk=['日','一','二','三','四','五','六'][d.getDay()];
     $('#todayStr').textContent=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 星期'+wk;
     var h=d.getHours();
-    $('#greet').textContent=(p.name||'Bonnie')+' · '+(h<6?'夜深了':h<11?'早上好':h<14?'中午好':h<18?'下午好':'晚上好');
+    $('#greet').textContent='· '+(h<6?'夜深了':h<11?'早上好':h<14?'中午好':h<18?'下午好':'晚上好');
   },
   today:function(){
     var box=$('#todayBox'); if(!box)return;
