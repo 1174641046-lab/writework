@@ -318,12 +318,12 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .page-forest.on{display:flex}
 .forest-bg{position:absolute;inset:0;z-index:0}
 .forest-bg svg{width:100%;height:100%;object-fit:cover}
-.forest-header{position:relative;z-index:2;text-align:center;padding:40px 20px 0}
+.forest-header{position:relative;z-index:2;text-align:center;padding:36px 20px 0}
 .forest-header h1{font-size:28px;font-weight:800;color:var(--green);letter-spacing:2px}
 .forest-header p{font-size:13px;color:var(--text2);margin-top:6px;letter-spacing:.5px}
-.forest-stats{position:relative;z-index:2;margin-top:auto;background:var(--card);border-radius:24px 24px 0 0;padding:20px 24px calc(14px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);gap:4px;box-shadow:0 -4px 24px rgba(0,0,0,.06)}
+.forest-stats{position:relative;z-index:2;margin:16px 16px 0;background:var(--card);border-radius:18px;padding:16px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;box-shadow:0 2px 14px rgba(46,125,50,.08)}
 .fs-item{text-align:center}
-.fs-num{font-size:26px;font-weight:800;color:var(--text);line-height:1.2;font-variant-numeric:tabular-nums}
+.fs-num{font-size:22px;font-weight:800;color:var(--text);line-height:1.2;font-variant-numeric:tabular-nums}
 .fs-label{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500}
 </style>
 </head>
@@ -524,41 +524,63 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <svg viewBox="0 0 390 774" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#E8F5E9" stop-opacity=".65"/>
-            <stop offset="35%" stop-color="#F1F8E9" stop-opacity=".3"/>
+            <stop offset="0%" stop-color="#E8F5E9" stop-opacity=".55"/>
+            <stop offset="40%" stop-color="#F1F8E9" stop-opacity=".25"/>
             <stop offset="100%" stop-color="#FAF8F0" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="fogGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#fff" stop-opacity=".2"/>
+            <stop offset="0%" stop-color="#fff" stop-opacity=".18"/>
             <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
           </linearGradient>
         </defs>
         <rect width="390" height="774" fill="url(#skyGrad)"/>
-        <path d="M0 520 Q80 450 160 480 Q250 430 340 470 Q380 490 390 480 L390 550 L0 550 Z" fill="#C8E6C9" opacity=".25"/>
-        <path d="M0 540 Q100 490 200 510 Q300 470 390 500 L390 560 L0 560 Z" fill="#A5D6A7" opacity=".18"/>
-        <g opacity=".2" fill="#81C784">
-          <path d="M30 540 L38 480 L46 540 Z"/><path d="M32 495 L38 455 L44 495 Z"/>
-          <path d="M85 535 L93 465 L101 535 Z"/><path d="M87 480 L93 440 L99 480 Z"/>
-          <path d="M150 530 L158 460 L166 530 Z"/><path d="M152 475 L158 435 L164 475 Z"/>
-          <path d="M220 535 L228 470 L236 535 Z"/><path d="M222 485 L228 448 L234 485 Z"/>
-          <path d="M290 530 L298 465 L306 530 Z"/><path d="M292 478 L298 442 L304 478 Z"/>
-          <path d="M350 540 L358 475 L366 540 Z"/><path d="M352 488 L358 452 L364 488 Z"/>
+        <!-- 远山 -->
+        <path d="M0 480 Q60 430 130 455 T260 440 Q340 450 390 435 L390 510 L0 510 Z" fill="#C8E6C9" opacity=".22"/>
+        <path d="M0 500 Q90 460 180 480 T320 465 Q360 472 390 460 L390 530 L0 530 Z" fill="#A5D6A7" opacity=".15"/>
+
+        <!-- 最远层：小圆树 -->
+        <g opacity=".18" fill="#A5D6A7">
+          <ellipse cx="35" cy="498" rx="14" ry="18"/><rect x="33" y="505" width="4" height="12" rx="1" fill="#8D6E63" opacity=".4"/>
+          <ellipse cx="90" cy="495" rx="12" ry="16"/><rect x="88.5" y="502" width="3" height="11" rx="1" fill="#8D6E63" opacity=".4"/>
+          <ellipse cx="155" cy="492" rx="13" ry="17"/><rect x="153.5" y="500" width="3" height="10" rx="1" fill="#8D6E63" opacity=".4"/>
+          <ellipse cx="225" cy="496" rx="12" ry="15"/><rect x="223.5" y="503" width="3" height="11" rx="1" fill="#8D6E63" opacity=".4"/>
+          <ellipse cx="295" cy="493" rx="14" ry="17"/><rect x="293.5" y="501" width="3" height="11" rx="1" fill="#8D6E63" opacity=".4"/>
+          <ellipse cx="355" cy="498" rx="11" ry="14"/><rect x="353.5" y="505" width="3" height="10" rx="1" fill="#8D6E63" opacity=".4"/>
         </g>
-        <g opacity=".38" fill="#66BB6A">
-          <path d="M55 550 L67 440 L79 550 Z"/><path d="M58 465 L67 400 L76 465 Z"/><rect x="64" y="530" width="6" height="30" rx="1" fill="#5D4037" opacity=".45"/>
-          <path d="M120 545 L132 435 L144 545 Z"/><path d="M123 460 L132 395 L141 460 Z"/><rect x="129" y="525" width="6" height="35" rx="1" fill="#5D4037" opacity=".45"/>
-          <path d="M260 548 L272 438 L284 548 Z"/><path d="M263 463 L272 398 L281 463 Z"/><rect x="269" y="528" width="6" height="32" rx="1" fill="#5D4037" opacity=".45"/>
-          <path d="M330 545 L342 435 L354 545 Z"/><path d="M333 460 L342 395 L351 460 Z"/><rect x="339" y="525" width="6" height="35" rx="1" fill="#5D4037" opacity=".45"/>
+
+        <!-- 中远层：中小圆树 -->
+        <g opacity=".28" fill="#81C784">
+          <ellipse cx="60" cy="510" rx="22" ry="28"/><rect x="57" y="525" width="6" height="22" rx="1.5" fill="#6D4C41" opacity=".35"/>
+          <ellipse cx="135" cy="505" rx="20" ry="26"/><rect x="132.5" y="520" width="5" height="20" rx="1.5" fill="#6D4C41" opacity=".35"/>
+          <ellipse cx="205" cy="508" rx="21" ry="27"/><rect x="202.5" y="523" width="5" height="21" rx="1.5" fill="#6D4C41" opacity=".35"/>
+          <ellipse cx="275" cy="504" rx="19" ry="25"/><rect x="272.5" y="519" width="5" height="19" rx="1.5" fill="#6D4C41" opacity=".35"/>
+          <ellipse cx="340" cy="510" rx="21" ry="27"/><rect x="337.5" y="525" width="5" height="21" rx="1.5" fill="#6D4C41" opacity=".35"/>
         </g>
-        <g opacity=".55" fill="#43A047">
-          <path d="M10 560 L28 380 L46 560 Z"/><path d="M15 410 L28 320 L41 410 Z"/><rect x="24" y="535" width="8" height="45" rx="2" fill="#4E342E" opacity=".5"/>
-          <path d="M175 555 L193 375 L211 555 Z"/><path d="M180 405 L193 315 L206 405 Z"/><rect x="189" y="530" width="8" height="45" rx="2" fill="#4E342E" opacity=".5"/>
+
+        <!-- 中层：中等圆树 -->
+        <g opacity=".42" fill="#66BB6A">
+          <ellipse cx="30" cy="530" rx="32" ry="40"/><rect x="26" y="555" width="8" height="32" rx="2" fill="#5D4037" opacity=".4"/>
+          <ellipse cx="115" cy="525" rx="30" ry="38"/><rect x="111" y="550" width="8" height="30" rx="2" fill="#5D4037" opacity=".4"/>
+          <ellipse cx="250" cy="528" rx="31" ry="39"/><rect x="246" y="553" width="8" height="31" rx="2" fill="#5D4037" opacity=".4"/>
+          <ellipse cx="355" cy="532" rx="29" ry="37"/><rect x="351.5" y="557" width="7" height="29" rx="2" fill="#5D4037" opacity=".4"/>
         </g>
-        <g opacity=".72" fill="#2E7D32">
-          <path d="M310 565 L335 340 L360 565 Z"/><path d="M317 375 L335 260 L353 375 Z"/><rect x="330" y="538" width="10" height="52" rx="2" fill="#3E2723" opacity=".6"/>
+
+        <!-- 近层：大圆树 -->
+        <g opacity=".58" fill="#43A047">
+          <ellipse cx="80" cy="550" rx="44" ry="55"/><rect x="74" y="585" width="12" height="45" rx="2.5" fill="#4E342E" opacity=".48"/>
+          <ellipse cx="190" cy="545" rx="46" ry="58"/><rect x="184" y="582" width="12" height="48" rx="2.5" fill="#4E342E" opacity=".48"/>
+          <ellipse cx="310" cy="552" rx="42" ry="53"/><rect x="304" y="586" width="12" height="43" rx="2.5" fill="#4E342E" opacity=".48"/>
         </g>
-        <rect y="480" width="390" height="150" fill="url(#fogGrad)"/>
-        <rect y="550" width="390" height="100" fill="#FAF8F0" opacity=".5"/>
+
+        <!-- 最近层：最大圆树 -->
+        <g opacity=".75" fill="#2E7D32">
+          <ellipse cx="165" cy="580" rx="58" ry="72"/><rect x="157" y="630" width="16" height="60" rx="3" fill="#3E2723" opacity=".55"/>
+          <ellipse cx="365" cy="578" rx="52" ry="65"/><rect x="358" y="626" width="14" height="54" rx="3" fill="#3E2723" opacity=".55"/>
+        </g>
+
+        <!-- 雾气 -->
+        <rect y="500" width="390" height="140" fill="url(#fogGrad)"/>
+        <rect y="580" width="390" height="120" fill="#FAF8F0" opacity=".45"/>
       </svg>
     </div>
     <div class="forest-header">
@@ -628,7 +650,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.7.1</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.7.2</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
