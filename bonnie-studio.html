@@ -5,29 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#4F7A5B">
+<meta name="theme-color" content="#2E7D32">
 <title>Bonnie 自媒体工作台</title>
 <!-- 本工作台通过 WorkBuddy 资料库能力（library skill）搭建、存储和部署 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 input,textarea,select,[contenteditable]{user:text;-webkit-user-select:auto}
 :root{
-  --bg:#F6F4EF; --card:#FFFFFF; --card2:#FBFAF7;
-  --text:#2A2723; --text2:#7A746A; --text3:#ADA69B;
-  --line:#EAE5DC;
-  --green:#4F7A5B; --green-l:#E8F0EA;
-  --brown:#B5764F; --brown-l:#F8EEE6;
-  --danger:#C0503C; --danger-l:#FBEDEA;
-  --shadow:0 2px 14px rgba(62,52,36,.07);
+  --bg:#FAF8F0; --card:#FFFFFF; --card2:#FCFBF7;
+  --text:#3D3D3D; --text2:#6B7280; --text3:#9CA3AF;
+  --line:#ECE7DD;
+  --green:#2E7D32; --green-l:#E8F5E9;
+  --brown:#8D6E63; --brown-l:#F3EAE3;
+  --danger:#D84315; --danger-l:#FDECE7;
+  --shadow:0 2px 14px rgba(46,125,50,.08);
   --r:16px;
 }
 html[data-theme="dark"]{
   --bg:#141614; --card:#1D201D; --card2:#232623;
   --text:#E9E6E0; --text2:#9C968D; --text3:#6C6862;
   --line:#2C302C;
-  --green:#7FB08A; --green-l:#22301F;
-  --brown:#D89A72; --brown-l:#33251C;
-  --danger:#E0796A; --danger-l:#33211E;
+  --green:#66BB6A; --green-l:#1B3A1E;
+  --brown:#B0876F; --brown-l:#2A1E18;
+  --danger:#EF6C4D; --danger-l:#2E1A16;
   --shadow:0 2px 14px rgba(0,0,0,.4);
 }
 body{
@@ -313,6 +313,17 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(14px);background:rgba(32,30,26,.94);color:#fff;padding:11px 20px;border-radius:12px;font-size:13.5px;z-index:300;opacity:0;transition:.24s;pointer-events:none;max-width:86%;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .hidden{display:none !important}
+/* ========== 森林页面（新增） ========== */
+.page-forest{height:calc(100vh - 54px - 70px);display:flex;flex-direction:column;position:relative;overflow:hidden;padding:0 !important}
+.forest-bg{position:absolute;inset:0;z-index:0}
+.forest-bg svg{width:100%;height:100%;object-fit:cover}
+.forest-header{position:relative;z-index:2;text-align:center;padding:40px 20px 0}
+.forest-header h1{font-size:28px;font-weight:800;color:var(--green);letter-spacing:2px}
+.forest-header p{font-size:13px;color:var(--text2);margin-top:6px;letter-spacing:.5px}
+.forest-stats{position:relative;z-index:2;margin-top:auto;background:var(--card);border-radius:24px 24px 0 0;padding:20px 24px calc(14px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);gap:4px;box-shadow:0 -4px 24px rgba(0,0,0,.06)}
+.fs-item{text-align:center}
+.fs-num{font-size:26px;font-weight:800;color:var(--text);line-height:1.2;font-variant-numeric:tabular-nums}
+.fs-label{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500}
 </style>
 </head>
 <body>
@@ -321,6 +332,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 <symbol id="i-trunk" viewBox="0 0 24 24"><path d="M12 22V9M12 9 8 3M12 9l4-6M12 14l-3-3M12 17l3.5-3.5"/></symbol>
 <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M4 20c0-8 5-13 16-14 1 10-4 15-11 15H4z"/><path d="M4 20c4-5 7-8 12-10"/></symbol>
 <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="18" r="2.4"/><circle cx="19" cy="18" r="2.4"/><path d="M12 7.4v4.3M10.4 13.4 6.6 16M13.6 13.4 17.4 16"/></symbol>
+<symbol id="i-forest" viewBox="0 0 24 24"><path d="M12 22c-1-4-1-8 0-12M12 10c-3 0-6-2-8-5M12 10c3 0 6-2 8-5M12 22c1.5-3 4-5 7-6M12 22c-1.5-3-4-5-7-6" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
 <symbol id="i-me" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.2-3.8 4-5.6 7.5-5.6S18.3 16.2 19.5 20"/></symbol>
 <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
 <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.4"/></symbol>
@@ -505,6 +517,61 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     <div id="graphDetail" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
   </section>
 
+  <!-- ============ 森林（新增） ============ -->
+  <section class="page page-forest" id="page-forest">
+    <div class="forest-bg">
+      <svg viewBox="0 0 390 774" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E8F5E9" stop-opacity=".65"/>
+            <stop offset="35%" stop-color="#F1F8E9" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="#FAF8F0" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="fogGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fff" stop-opacity=".2"/>
+            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <rect width="390" height="774" fill="url(#skyGrad)"/>
+        <path d="M0 520 Q80 450 160 480 Q250 430 340 470 Q380 490 390 480 L390 550 L0 550 Z" fill="#C8E6C9" opacity=".25"/>
+        <path d="M0 540 Q100 490 200 510 Q300 470 390 500 L390 560 L0 560 Z" fill="#A5D6A7" opacity=".18"/>
+        <g opacity=".2" fill="#81C784">
+          <path d="M30 540 L38 480 L46 540 Z"/><path d="M32 495 L38 455 L44 495 Z"/>
+          <path d="M85 535 L93 465 L101 535 Z"/><path d="M87 480 L93 440 L99 480 Z"/>
+          <path d="M150 530 L158 460 L166 530 Z"/><path d="M152 475 L158 435 L164 475 Z"/>
+          <path d="M220 535 L228 470 L236 535 Z"/><path d="M222 485 L228 448 L234 485 Z"/>
+          <path d="M290 530 L298 465 L306 530 Z"/><path d="M292 478 L298 442 L304 478 Z"/>
+          <path d="M350 540 L358 475 L366 540 Z"/><path d="M352 488 L358 452 L364 488 Z"/>
+        </g>
+        <g opacity=".38" fill="#66BB6A">
+          <path d="M55 550 L67 440 L79 550 Z"/><path d="M58 465 L67 400 L76 465 Z"/><rect x="64" y="530" width="6" height="30" rx="1" fill="#5D4037" opacity=".45"/>
+          <path d="M120 545 L132 435 L144 545 Z"/><path d="M123 460 L132 395 L141 460 Z"/><rect x="129" y="525" width="6" height="35" rx="1" fill="#5D4037" opacity=".45"/>
+          <path d="M260 548 L272 438 L284 548 Z"/><path d="M263 463 L272 398 L281 463 Z"/><rect x="269" y="528" width="6" height="32" rx="1" fill="#5D4037" opacity=".45"/>
+          <path d="M330 545 L342 435 L354 545 Z"/><path d="M333 460 L342 395 L351 460 Z"/><rect x="339" y="525" width="6" height="35" rx="1" fill="#5D4037" opacity=".45"/>
+        </g>
+        <g opacity=".55" fill="#43A047">
+          <path d="M10 560 L28 380 L46 560 Z"/><path d="M15 410 L28 320 L41 410 Z"/><rect x="24" y="535" width="8" height="45" rx="2" fill="#4E342E" opacity=".5"/>
+          <path d="M175 555 L193 375 L211 555 Z"/><path d="M180 405 L193 315 L206 405 Z"/><rect x="189" y="530" width="8" height="45" rx="2" fill="#4E342E" opacity=".5"/>
+        </g>
+        <g opacity=".72" fill="#2E7D32">
+          <path d="M310 565 L335 340 L360 565 Z"/><path d="M317 375 L335 260 L353 375 Z"/><rect x="330" y="538" width="10" height="52" rx="2" fill="#3E2723" opacity=".6"/>
+        </g>
+        <rect y="480" width="390" height="150" fill="url(#fogGrad)"/>
+        <rect y="550" width="390" height="100" fill="#FAF8F0" opacity=".5"/>
+      </svg>
+    </div>
+    <div class="forest-header">
+      <h1>知识森林</h1>
+      <p>你的知识图谱概览</p>
+    </div>
+    <div class="forest-stats">
+      <div class="fs-item"><div class="fs-num" id="fsIdea">0</div><div class="fs-label">灵感</div></div>
+      <div class="fs-item"><div class="fs-num" id="fsTip">0</div><div class="fs-label">枝端</div></div>
+      <div class="fs-item"><div class="fs-num" id="fsLink">0</div><div class="fs-label">关联</div></div>
+      <div class="fs-item"><div class="fs-num" id="fsRead">0</div><div class="fs-label">阅读</div></div>
+    </div>
+  </section>
+
   <!-- ============ 设置 ============ -->
   <section class="page" id="page-me">
     <div style="display:flex;align-items:center;gap:10px;padding:16px 2px 4px">
@@ -560,7 +627,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.6.4</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.7.0</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -576,6 +643,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
   <button data-p="trunk" onclick="Nav.to('trunk')"><svg><use href="#i-note"/></svg><span>树干</span></button>
   <button data-p="branch" onclick="Nav.to('branch')"><svg><use href="#i-branch"/></svg><span>枝条</span></button>
   <button data-p="leaf" onclick="Nav.to('leaf')"><svg><use href="#i-leaf"/></svg><span>绿叶</span></button>
+  <button data-p="forest" onclick="Nav.to('forest')"><svg><use href="#i-forest"/></svg><span>森林</span></button>
 </nav>
 
 <!-- 备忘录详情 -->
@@ -1034,8 +1102,32 @@ var Nav={
     if(p==='branch')Graph.draw();
     if(p==='leaf')Leaf.render();
     if(p==='trunk')Render.memoFull();
+    if(p==='forest')Forest.render();
   },
   back:function(){this.to(this.prev||'root');}
+};
+
+/* ================= 森林 ================= */
+var Forest={
+  render:function(){
+    var notes=Data.notes||[];
+    var kw={}, pair={};
+    notes.forEach(function(n){
+      var ks=extractKeywords((n.title||'')+' '+(n.text||''),60);
+      var seen={}; ks.forEach(function(k){kw[k]=(kw[k]||0)+1; seen[k]=1;});
+      var arr=Object.keys(seen);
+      for(var i=0;i<arr.length;i++)for(var j=i+1;j<arr.length;j++){
+        var a=arr[i],b=arr[j],key=a<b?a+'|'+b:b+'|'+a;
+        pair[key]=(pair[key]||0)+1;
+      }
+    });
+    var keys=Object.keys(kw), links=0;
+    for(var k in pair)if(pair[k]>=2)links++;
+    $('#fsIdea').textContent=notes.length;
+    $('#fsTip').textContent=keys.length;
+    $('#fsLink').textContent=links;
+    $('#fsRead').textContent=0;
+  }
 };
 
 /* ================= 录音识别 ================= */
