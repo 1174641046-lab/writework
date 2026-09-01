@@ -134,6 +134,12 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .note-count{cursor:pointer;display:inline-flex;align-items:center;gap:2px;color:var(--text2);font-size:13px}
 .note-count svg{width:16px;height:16px;stroke:var(--green)}
 .fl-row{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px 3px}
+/* 详情页标题输入 + 清空按钮 */
+.ti-wrap{position:relative;margin-bottom:8px}
+.ti-wrap input{padding-right:40px;margin-bottom:0}
+.ti-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:var(--line);color:var(--text2);border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.ti-clear svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4}
+.ti-clear:active{transform:translateY(-50%) scale(.9)}
 
 /* ---------- 录音区 ---------- */
 .rec{text-align:center;padding:20px 16px 16px}
@@ -545,7 +551,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.5.0</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.5.1</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -576,7 +582,11 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <label class="fl" style="margin:0">标题</label>
       <button class="btn btn-s btn-o" onclick="Detail.regen()"><svg><use href="#i-wand"/></svg>重拟标题</button>
     </div>
-    <input type="text" id="dtTitleIn" oninput="Detail.markDirty()" style="font-weight:600;margin-bottom:14px">
+    <div class="ti-wrap">
+      <input type="text" id="dtTitleIn" placeholder="输入标题，或点「重拟标题」自动生成" oninput="Detail.onTitleInput()" style="font-weight:600">
+      <button class="ti-clear" id="dtTitleClear" onclick="Detail.clearTitle()" aria-label="清除标题"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <button class="btn btn-s btn-p" id="dtOptBtn" style="width:100%;margin-top:8px;display:none" onclick="Detail.optimizeTitle()"><svg><use href="#i-wand"/></svg>AI 优化标题</button>
     <label class="fl">关键词标签</label>
     <div class="chips" id="dtTags" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:7px;margin-bottom:16px">
@@ -895,6 +905,27 @@ function genTitle(text,tags){
   var first=String(text||'').split(/[。！？\n]/)[0].trim();
   if(first.length>=6&&first.length<=22&&Math.random()<0.34)return first;
   return t;
+}
+/* 根据用户自填标题，生成更适自媒体发布的优化候选（纯前端启发式） */
+function genTitleOptions(raw){
+  raw=(raw||'').trim();
+  if(!raw)return [];
+  var kws=extractKeywords(raw,3);
+  var kw=kws.length?kws[0]:raw;
+  var shortK=kw.length<=8?kw:raw.slice(0,8);
+  var opts=[];
+  function add(s){s=(s||'').trim();if(s&&opts.indexOf(s)===-1&&s.length<=30)opts.push(s);}
+  add(raw+'｜一篇讲透');
+  add('关于'+raw+'，这 3 点越早知道越好');
+  add('别再踩'+shortK+'的坑了，试试这个思路');
+  add('我终于搞懂了'+raw);
+  add('为什么'+shortK+'？真相都在这里');
+  add(raw+'，建议收藏');
+  add('新手必看：'+raw+'全攻略');
+  add('原来'+shortK+'还能这样，涨知识了');
+  add(raw+'（附实操清单）');
+  add('盘点｜'+raw+'的 5 个实用方法');
+  return opts.slice(0,4);
 }
 
 /* ================= 云端同步 ================= */
@@ -1658,6 +1689,33 @@ var Detail={
     this.cur=null;this.dirty=false;
   },
   markDirty:function(){this.dirty=true;},
+  onTitleInput:function(){this.markDirty();this.toggleTitleBtns();},
+  toggleTitleBtns:function(){
+    var v=$('#dtTitleIn').value.trim();
+    var btn=$('#dtOptBtn'),clr=$('#dtTitleClear');
+    if(btn)btn.style.display=v?'flex':'none';
+    if(clr)clr.style.display=v?'flex':'none';
+  },
+  clearTitle:function(){var t=$('#dtTitleIn');if(t){t.value='';t.focus();}this.onTitleInput();},
+  optimizeTitle:function(){
+    var raw=$('#dtTitleIn').value.trim();
+    if(!raw){toast('先输入标题再优化');return;}
+    var opts=genTitleOptions(raw);
+    if(!opts.length){toast('暂无法优化');return;}
+    var h='<h4>AI 优化标题</h4><p style="margin-bottom:12px">根据「'+esc(raw)+'」生成更适自媒体发布的版本，点选即可替换：</p>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">';
+    opts.forEach(function(o,i){h+='<button class="btn" style="justify-content:flex-start;text-align:left;font-weight:500" onclick="Detail.applyOpt('+i+')">'+esc(o)+'</button>';});
+    h+='</div><div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">取消</button></div>';
+    $('#dlg').innerHTML=h;
+    $('#mask').classList.add('on');
+    this._opts=opts;
+  },
+  applyOpt:function(i){
+    var opts=this._opts||[];
+    if(opts[i]==null)return;
+    var t=$('#dtTitleIn');if(t)t.value=opts[i];
+    closeMask();this.onTitleInput();toast('已应用优化标题');
+  },
   autoGrow:function(){var t=$('#dtText');if(!t)return;t.style.height='auto';t.style.height=(t.scrollHeight+100)+'px';},
   batchReplace:function(){
     $('#dlg').innerHTML='<h4>批量替换文字</h4>'+
@@ -1684,6 +1742,7 @@ var Detail={
     $('#dtTitle').textContent=n.title;
     $('#dtTitleIn').value=n.title;
     $('#dtText').value=n.text;this.autoGrow();
+    this.toggleTitleBtns();
     this.paintTags();
     this.paintAudio();
     this.paintImgs();
