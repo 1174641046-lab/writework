@@ -120,13 +120,14 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 
 /* 首页两列卡片：数据统计 + 今日待办 */
 .top-row{display:flex;gap:10px;margin-bottom:14px;align-items:stretch}
-.today-compact{margin:0;flex:1;min-width:0;padding:12px;display:flex;flex-direction:column}
+.top-row>.card,.top-row>.today{height:auto}
+.today-compact{margin:0;flex:1;min-width:0;padding:12px;display:flex;flex-direction:column;box-sizing:border-box}
 .today-compact h2{font-size:13px;margin-bottom:8px}
-.today-compact .n{margin-left:0;font-size:11.5px;padding:6px 8px}
+.today-compact .n{margin-left:0;font-size:11.5px;padding:6px 8px;flex:1;display:flex;align-items:center}
 .today-compact .ti{padding:6px 8px;margin-bottom:4px}
 .today-compact .ti .bd b{font-size:12.5px}
 .today-compact .ti .bd em{font-size:10.5px}
-.today-compact .n{flex:1;display:flex;align-items:center}
+
 /* 通知栏 / 列表滑动项 */
 .swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px;contain:layout paint}
 .swipe:last-child{margin-bottom:0}
@@ -1260,11 +1261,13 @@ var Render={
     });
     items.sort(function(a,b){return (b.od?1:0)-(a.od?1:0);});
     var h='<h2><svg><use href="#i-clock"/></svg>今日待办</h2>';
+    h+='<div class="tc-body" style="flex:1;display:flex;flex-direction:column;min-height:0">';
     if(todayCnt===0&&!items.length)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
     if(!items.length&&todayCnt>0)h+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
     items.slice(0,4).forEach(function(it){
       h+='<div class="ti'+(it.od?' od':'')+'" onclick="Detail.open(\''+it.n.id+'\')"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div></div>';
     });
+    h+='</div>';
     box.innerHTML=h;
   },
   noteCardHTML:function(n,home){
