@@ -120,9 +120,9 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 
 /* 首页两列卡片：数据统计 + 今日待办 */
 .top-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;align-items:stretch}
-.top-row>.card{display:flex;flex-direction:column}
+.top-row>.card{display:flex;flex-direction:column;height:150px;overflow:hidden}
 .top-row .stats{flex:1;align-content:center}
-.today-compact{margin:0;min-width:0;padding:12px;display:flex;flex-direction:column;box-sizing:border-box}
+.today-compact{margin:0;min-width:0;padding:12px;display:flex;flex-direction:column;box-sizing:border-box;height:150px;overflow:hidden}
 .today-compact h2{font-size:13px;margin-bottom:8px}
 .today-compact .n{margin-left:0;font-size:11.5px;padding:6px 8px;flex:1;display:flex;align-items:center}
 .today-compact .ti{padding:6px 8px;margin-bottom:4px}
@@ -560,7 +560,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.6.0</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.6.3</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
