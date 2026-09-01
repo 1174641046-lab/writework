@@ -120,7 +120,8 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px}
 .swipe:last-child{margin-bottom:0}
 .sw-del{position:absolute;left:0;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:13px;font-weight:600}
-.swipe .ti,.swipe .note{position:relative;z-index:1;transition:transform .2s;will-change:transform;touch-action:pan-y;margin-bottom:0}
+.sw-del.right{left:auto;right:0}
+.swipe .ti,.swipe .note,.swipe .today-inner{position:relative;z-index:1;transition:transform .2s;will-change:transform;touch-action:pan-y;margin-bottom:0}
 .note-count{cursor:pointer;display:inline-flex;align-items:center;gap:2px;color:var(--text2);font-size:13px}
 .note-count svg{width:16px;height:16px;stroke:var(--green)}
 .fl-row{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px 3px}
@@ -464,9 +465,13 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <svg id="graph" viewBox="0 0 340 400"></svg>
       </div>
       <div style="display:flex;gap:8px;margin-top:11px">
-        <button class="btn btn-s" style="flex:1" onclick="Graph.relayout()"><svg><use href="#i-refresh"/></svg>重新布局</button>
-        <button class="btn btn-s" style="flex:1" onclick="Graph.zoom(1.2)"><svg><use href="#i-plus"/></svg>放大</button>
-        <button class="btn btn-s" style="flex:1" onclick="Graph.zoom(0.83)"><svg><use href="#i-x"/></svg>缩小</button>
+      <button class="btn btn-s" style="flex:1" onclick="Graph.relayout()"><svg><use href="#i-refresh"/></svg>重新布局</button>
+      <button class="btn btn-s" style="flex:1" onclick="Graph.zoom(1.2)"><svg><use href="#i-plus"/></svg>放大</button>
+      <button class="btn btn-s" style="flex:1" onclick="Graph.zoom(0.83)"><svg><use href="#i-x"/></svg>缩小</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-s" style="flex:1" onclick="Graph.setDot(1.18)"><svg><use href="#i-plus"/></svg>圆点＋</button>
+        <button class="btn btn-s" style="flex:1" onclick="Graph.setDot(0.85)"><svg><use href="#i-x"/></svg>圆点－</button>
+      </div>
       </div>
       <div class="glegend" id="graphLegend"></div>
     </div>
@@ -524,7 +529,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.1.0</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>Bonnie 自媒体工作台</span></div><b style="color:var(--green);font-size:14px">v1.2.0</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -551,30 +556,30 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
   </div>
   <div class="sheet-bd">
     <div id="dtAudio"></div>
-    <label class="fl">标题</label>
-    <input type="text" id="dtTitleIn" oninput="Detail.markDirty()" style="font-weight:600;margin-bottom:12px">
+    <div class="fl-row" style="margin-bottom:6px">
+      <label class="fl" style="margin:0">标题</label>
+      <button class="btn btn-s btn-o" onclick="Detail.regen()"><svg><use href="#i-wand"/></svg>重拟标题</button>
+    </div>
+    <input type="text" id="dtTitleIn" oninput="Detail.markDirty()" style="font-weight:600;margin-bottom:14px">
     <label class="fl">关键词标签</label>
     <div class="chips" id="dtTags" style="margin-bottom:12px"></div>
-    <div style="display:flex;gap:7px;margin-bottom:14px">
+    <div style="display:flex;gap:7px;margin-bottom:16px">
       <input type="text" id="dtTagIn" placeholder="添加标签" style="flex:1" onkeydown="if(event.key==='Enter')Detail.addTag()">
       <button class="btn btn-s" onclick="Detail.addTag()">添加</button>
     </div>
-    <div class="fl-row"><label class="fl">文字稿</label><button class="btn btn-s btn-o" onclick="Detail.batchReplace()"><svg><use href="#i-wand"/></svg>批量替换</button></div>
-    <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()"></textarea>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <label class="fl" style="margin-bottom:10px;display:block">创作状态</label>
+    <div class="seg" id="dtStatus" style="width:100%;margin-bottom:18px">
+      <button style="flex:1" data-s="灵感" onclick="Detail.setStatus('灵感')">灵感</button>
+      <button style="flex:1" data-s="写作中" onclick="Detail.setStatus('写作中')">写作中</button>
+      <button style="flex:1" data-s="已发布" onclick="Detail.setStatus('已发布')">已发布</button>
+    </div>
+    <div style="margin-bottom:6px">
       <label class="fl" style="margin:0">配图 <span id="dtImgCount" style="font-weight:400"></span></label>
-      <button class="btn btn-s btn-o" onclick="Detail.regen()"><svg><use href="#i-wand"/></svg>重拟标题</button>
     </div>
-    <div class="imgs" id="dtImgs"></div>
+    <div class="imgs" id="dtImgs" style="margin-bottom:18px"></div>
     <input type="file" id="dtImgFile" accept="image/*" multiple class="hidden" onchange="Detail.pickImgs(this)">
-    <div style="margin-top:16px">
-      <label class="fl">创作状态</label>
-      <div class="seg" id="dtStatus" style="width:100%">
-        <button style="flex:1" data-s="灵感" onclick="Detail.setStatus('灵感')">灵感</button>
-        <button style="flex:1" data-s="写作中" onclick="Detail.setStatus('写作中')">写作中</button>
-        <button style="flex:1" data-s="已发布" onclick="Detail.setStatus('已发布')">已发布</button>
-      </div>
-    </div>
+    <div class="fl-row" style="margin-top:6px"><label class="fl">文字稿</label><button class="btn btn-s btn-o" onclick="Detail.batchReplace()"><svg><use href="#i-wand"/></svg>批量替换</button></div>
+    <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()"></textarea>
     <div id="dtMeta" class="muted" style="margin-top:14px;font-size:11.5px;text-align:center"></div>
   </div>
   <div class="sheet-ft">
@@ -595,6 +600,7 @@ function pad(n){return n<10?'0'+n:''+n;}
 function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function today(){return ymd(new Date());}
 function dayDiff(s){var a=new Date(s+'T00:00:00'),b=new Date(today()+'T00:00:00');return Math.round((b-a)/86400000);}
+function shortDate(s){var p=String(s).split('-');return (+p[1])+'月'+(+p[2])+'日';}
 function fmtTime(sec){sec=Math.max(0,Math.floor(sec));return pad(Math.floor(sec/60))+':'+pad(sec%60);}
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on');},2100);}
 function confirmDlg(title,msg,okText,onOk,danger){
@@ -606,22 +612,37 @@ function confirmDlg(title,msg,okText,onOk,danger){
 }
 function closeMask(){$('#mask').classList.remove('on');}
 function makeSwipe(wrap,opt){
-  var content=wrap.querySelector('.ti')||wrap.querySelector('.note');
+  var content=wrap.querySelector('.ti')||wrap.querySelector('.note')||wrap.querySelector('.today-inner');
+  if(!content)return;
+  var dir=opt.dir==='left'?-1:1;
   var btnW=opt.btnW||72, sx,sy,dx=0,active=false,moved=false,sw=false;
   wrap.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;active=true;moved=false;sw=false;content.style.transition='';},{passive:true});
   wrap.addEventListener('touchmove',function(e){
     if(!active)return;
     var t=e.touches[0],cx=t.clientX-sx,cy=t.clientY-sy;
     if(!moved){if(Math.abs(cx)>6&&Math.abs(cx)>Math.abs(cy))moved=true;else if(Math.abs(cy)>6&&Math.abs(cx)<=Math.abs(cy)){active=false;return;}}
-    if(moved){if(cx>0){if(e.cancelable)e.preventDefault();dx=Math.min(cx,btnW+24);content.style.transform='translateX('+dx+'px)';}else{dx=0;content.style.transform='translateX(0)';}}
+    if(!moved)return;
+    if(dir>0){ // 右滑：内容右移，露出左侧按钮
+      if(cx>0){if(e.cancelable)e.preventDefault();dx=Math.min(cx,btnW+24);content.style.transform='translateX('+dx+'px)';}
+      else{dx=0;content.style.transform='translateX(0)';}
+    }else{ // 左滑：内容左移，露出右侧按钮
+      if(cx<0){if(e.cancelable)e.preventDefault();dx=Math.max(cx,-(btnW+24));content.style.transform='translateX('+dx+'px)';}
+      else{dx=0;content.style.transform='translateX(0)';}
+    }
   },{passive:false});
   wrap.addEventListener('touchend',function(){
     if(!active)return;active=false;
     if(!moved)return;
     content.style.transition='transform .2s';
-    if(dx>=opt.full){content.style.transform='translateX(0)';opt.onFull&&opt.onFull();}
-    else if(dx>=opt.reveal){content.style.transform='translateX('+btnW+'px)';opt.onReveal&&opt.onReveal();}
-    else{content.style.transform='translateX(0)';sw=true;}
+    if(dir>0){
+      if(dx>=opt.full){content.style.transform='translateX(0)';opt.onFull&&opt.onFull();}
+      else if(dx>=opt.reveal){content.style.transform='translateX('+btnW+'px)';opt.onReveal&&opt.onReveal();}
+      else{content.style.transform='translateX(0)';sw=true;}
+    }else{
+      if(dx<=-opt.full){content.style.transform='translateX(0)';opt.onFull&&opt.onFull();}
+      else if(dx<=-opt.reveal){content.style.transform='translateX('+(-btnW)+'px)';opt.onReveal&&opt.onReveal();}
+      else{content.style.transform='translateX(0)';sw=true;}
+    }
   });
   wrap.addEventListener('click',function(e){if(sw){e.stopPropagation();e.preventDefault();sw=false;}},true);
 }
@@ -632,6 +653,7 @@ var LS={
   get:function(k,d){try{var v=localStorage.getItem('wb_'+k);return v?JSON.parse(v):d;}catch(e){return d;}},
   set:function(k,v){try{localStorage.setItem('wb_'+k,JSON.stringify(v));}catch(e){toast('本地存储空间不足');}}
 };
+var todayClearedDate=LS.get('todayClearedDate','');
 var IDB=(function(){
   var p=null;
   function open(){
@@ -1132,10 +1154,12 @@ var Render={
     $('#greet').textContent=(p.name||'Bonnie')+' · '+(h<6?'夜深了':h<11?'早上好':h<14?'中午好':h<18?'下午好':'晚上好');
   },
   today:function(){
+    var box=$('#todayBox');
+    if(todayClearedDate===today()){box.style.display='none';return;}
+    box.style.display='';
     var items=[],now=today();
-    var todayCnt=Data.notes.filter(function(n){return n.date===now&&!n.cleared;}).length;
+    var todayCnt=Data.notes.filter(function(n){return n.date===now;}).length;
     Data.notes.forEach(function(n){
-      if(n.cleared)return;
       var diff=dayDiff(n.date);
       if(n.status==='灵感'&&diff>=2)items.push({n:n,od:true,why:'躺了 '+diff+' 天还没动笔'});
       else if(n.status==='写作中'&&diff>=5)items.push({n:n,od:true,why:'写了 '+diff+' 天还没发'});
@@ -1143,21 +1167,27 @@ var Render={
       else if(n.status==='灵感'&&diff===1)items.push({n:n,od:false,why:'昨天的灵感，趁热写'});
     });
     items.sort(function(a,b){return (b.od?1:0)-(a.od?1:0);});
-    var h='<h2><svg><use href="#i-clock"/></svg>今天要处理</h2>';
-    if(todayCnt===0&&!items.length)h+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
-    if(!items.length&&todayCnt>0)h+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
+    var inner='<h2><svg><use href="#i-clock"/></svg>今天要处理</h2>';
+    if(todayCnt===0&&!items.length)inner+='<div class="n">今天还没有新记录。想到什么，点下面那个圆按钮说两句。</div>';
+    if(!items.length&&todayCnt>0)inner+='<div class="n">没有积压的稿子，节奏很好。<br>今天记了 '+todayCnt+' 条灵感。</div>';
     items.slice(0,4).forEach(function(it){
-      h+='<div class="swipe ni" data-nid="'+it.n.id+'">'+
-        '<div class="sw-del" onclick="Render.clearNote(\''+it.n.id+'\')">清除</div>'+
-        '<div class="ti'+(it.od?' od':'')+'"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div>'+
-        '<button class="go" onclick="Detail.open(\''+it.n.id+'\')">处理</button></div></div>';
+      inner+='<div class="ti'+(it.od?' od':'')+'"><div class="bd"><b>'+esc(it.n.title)+'</b><em>'+esc(it.why)+'</em></div>'+
+        '<button class="go" onclick="Detail.open(\''+it.n.id+'\')">处理</button></div>';
     });
-    var box=$('#todayBox');box.innerHTML=h;
-    $$('#todayBox .swipe.ni').forEach(function(w){var id=w.dataset.nid;makeSwipe(w,{reveal:48,full:140,onFull:function(){Render.clearNote(id);},onReveal:function(){}});});
+    box.innerHTML='<div class="swipe today-sw">'+
+      '<div class="sw-del right" onclick="Render.clearToday()">清除</div>'+
+      '<div class="today-inner">'+inner+'</div></div>';
+    var sw=$('#todayBox .today-sw');
+    makeSwipe(sw,{dir:'left',reveal:84,full:200,onFull:function(){Render.clearToday();},onReveal:function(){}});
+  },
+  clearToday:function(){
+    todayClearedDate=today();LS.set('todayClearedDate',todayClearedDate);
+    var box=$('#todayBox');if(box){box.style.display='none';box.innerHTML='';}
+    toast('已清除今日通知');
   },
   noteCardHTML:function(n,home){
     var diff=dayDiff(n.date);
-    var when=diff===0?'今天':diff===1?'昨天':diff<7?diff+'天前':n.date.slice(5);
+    var when=diff===0?'今天':shortDate(n.date);
     var tags=n.tags&&n.tags.length?'<div class="chips" style="margin-top:8px">'+n.tags.slice(0,4).map(function(t){return '<span class="chip">#'+esc(t)+'</span>';}).join('')+'</div>':'';
     return '<div class="note st-'+esc(n.status)+'" onclick="Detail.open(\''+n.id+'\')" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP">'+
       '<h3>'+esc(n.title)+'</h3>'+
@@ -1172,7 +1202,7 @@ var Render={
   },
   notes:function(limit){
     var box=$('#noteList');
-    $('#noteCount').innerHTML='<span class="note-count" onclick="Nav.to(\'trunk\')"><svg><use href="#i-back" style="transform:rotate(180deg)"/></svg></span>';
+    $('#noteCount').innerHTML='<span class="note-count" onclick="Nav.to(\'trunk\')"><svg style="transform:rotate(180deg)"><use href="#i-back"/></svg></span>';
     if(!Data.notes.length){
       box.innerHTML='<div class="card empty"><svg><use href="#i-note"/></svg><div>还没有备忘录<br>录一段试试</div></div>';return;
     }
@@ -1210,10 +1240,7 @@ var Render={
       self.memoFull();self.notes();toast('已删除');
     },true);
   },
-  clearNote:function(id){
-    var n=Data.noteById(id);if(!n)return;
-    n.cleared=true;Data.saveNotes();this.today();toast('已清除');
-  },
+  clearNote:function(){this.clearToday();},
   stats:function(){
     var now=new Date(),mk=now.getFullYear()+'-'+pad(now.getMonth()+1);
     var month=Data.notes.filter(function(n){return n.date.slice(0,7)===mk;});
@@ -1330,7 +1357,7 @@ var Leaf={
     var kw=$('#leafKw').value.trim()||'自媒体';
     var pf=this.pf==='all'?'小红书':this.pf;
     var url;
-    if(pf==='小红书')url='https://www.xiaohongshu.com/search_result?keyword='+encodeURIComponent(kw)+'&type=51';
+    if(pf==='小红书')url='https://www.xiaohongshu.com/search?keyword='+encodeURIComponent(kw);
     else if(pf==='B站')url='https://search.bilibili.com/all?keyword='+encodeURIComponent(kw);
     else if(pf==='抖音')url='https://www.douyin.com/search/'+encodeURIComponent(kw);
     else {toast('视频号请在微信内搜索，复制分享链接后粘贴回来');return;}
@@ -1372,7 +1399,7 @@ var Leaf={
 
 /* ================= 枝条图谱 ================= */
 var Graph={
-  nodes:[],edges:[],scale:1,sel:null,cache:null,_sig:'',
+  nodes:[],edges:[],scale:1,dotScale:1,sel:null,cache:null,_sig:'',_pinch:false,
   build:function(){
     var freq={},co={},pairs={};
     Data.notes.forEach(function(n){
@@ -1406,7 +1433,19 @@ var Graph={
   },
   invalidate:function(){this.cache=null;},
   relayout:function(){this.cache=null;this.draw(true);},
-  zoom:function(f){this.scale=Math.max(.5,Math.min(2.2,this.scale*f));this.draw();},
+  zoom:function(f){this.scale=Math.max(.5,Math.min(2.6,this.scale*f));this.draw();},
+  applyViewBox:function(){var svg=$('#graph');if(svg)svg.setAttribute('viewBox',(170-170/this.scale)+' '+(200-200/this.scale)+' '+(340/this.scale)+' '+(400/this.scale));},
+  setDot:function(f){this.dotScale=Math.max(.5,Math.min(3,this.dotScale*f));this.draw();},
+  bindPinch:function(){
+    var svg=$('#graph');if(!svg||this._pinch)return;this._pinch=true;
+    var d0=0,s0=1;
+    function dist(t){var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
+    svg.addEventListener('touchstart',function(e){if(e.touches.length===2){d0=dist(e.touches);s0=Graph.scale;}},{passive:true});
+    svg.addEventListener('touchmove',function(e){
+      if(e.touches.length===2&&d0>0){if(e.cancelable)e.preventDefault();var d=dist(e.touches);if(d>0){Graph.scale=Math.max(.5,Math.min(2.6,s0*d/d0));Graph.applyViewBox();}}
+    },{passive:false});
+    svg.addEventListener('touchend',function(e){if(e.touches.length<2)d0=0;});
+  },
   layout:function(W,H){
     var ns=this.nodes,es=this.edges,N=ns.length;
     if(!N)return;
@@ -1472,7 +1511,7 @@ var Graph={
         '" stroke="var(--green)" stroke-opacity="'+op.toFixed(2)+'" stroke-width="'+(1+e.w*.5).toFixed(1)+'"/>';
     });
     this.nodes.forEach(function(n,i){
-      var r=10+Math.sqrt(n.n/maxN)*16;
+      var r=(10+Math.sqrt(n.n/maxN)*16)*this.dotScale;
       var col=n.n>=3?'var(--brown)':'var(--green)';
       var sel=Graph.sel===n.id?' sel':'';
       h+='<g class="gnode'+sel+'" data-i="'+i+'" transform="translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')">'+
@@ -1482,7 +1521,7 @@ var Graph={
         '</g>';
     });
     svg.innerHTML=h;
-    svg.setAttribute('viewBox',(170-170/this.scale)+' '+(200-200/this.scale)+' '+(340/this.scale)+' '+(400/this.scale));
+    this.applyViewBox();
     var self=this;
     $$('#graph .gnode').forEach(function(g){
       g.addEventListener('click',function(){self.select(Graph.nodes[+g.dataset.i].id);});
