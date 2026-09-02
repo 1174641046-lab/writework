@@ -857,7 +857,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.16</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.17</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1637,38 +1637,6 @@ var Rec={
     this.timer=setInterval(function(){this.sec++;this.renderLive();var ws=this.popWave();if(ws)ws.forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});}.bind(this),1000);
   },
   togglePause:function(){ if(this.paused)this.resume(); else this.pause(); },
-  // 微信式「按住说话」：按住录音，松手结束，上滑取消（与原有的点按流程并存）
-  holdDown:function(e){
-    if(e&&e.preventDefault)e.preventDefault();
-    if(this.recording)return; // 已在录音（点按模式）时不抢占
-    this.holdMode=true;this._holdRelease=false;this._holdCancel=false;
-    var btn=document.getElementById('recHoldBtn');
-    if(btn){btn.classList.add('on');try{if(e&&e.pointerId!=null)e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}}
-    this.start();
-  },
-  holdMove:function(e){
-    if(!this.holdMode||!this.recording)return;
-    var btn=document.getElementById('recHoldBtn');if(!btn)return;
-    var r=btn.getBoundingClientRect();
-    var cancel=(e.clientY < r.top - 28); // 上滑超过阈值 = 取消
-    this._holdCancel=cancel;
-    btn.classList.toggle('cancel',cancel);
-    var lbl=document.getElementById('recHoldLbl');if(lbl)lbl.textContent=cancel?'松开 取消':'按住 说话';
-  },
-  holdUp:function(e){
-    if(e&&e.preventDefault)e.preventDefault();
-    var btn=document.getElementById('recHoldBtn');
-    if(btn){btn.classList.remove('on');btn.classList.remove('cancel');}
-    this._holdRelease=true;
-    if(!this.recording)return; // 麦克风授权还没完成，等 start 回调里处理
-    if(this._holdCancel)this.cancelRec(); else this.done();
-  },
-  holdCancelEv:function(e){
-    var btn=document.getElementById('recHoldBtn');
-    if(btn){btn.classList.remove('on');btn.classList.remove('cancel');}
-    this._holdRelease=true;this._holdCancel=true;
-    if(this.recording)this.cancelRec();
-  },
   done:function(){
     if(!this.recording)return;
     this._stopReason='done';
@@ -1687,7 +1655,6 @@ var Rec={
   },
   afterCancel:function(){
     this.recording=false;this.paused=false;this.holdMode=false;
-    var l=document.getElementById('recHoldLbl');if(l)l.textContent='按住 说话';
     if(this.timer){clearInterval(this.timer);this.timer=null;}
     if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
     if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
@@ -1770,7 +1737,6 @@ var Rec={
     var url=blob?URL.createObjectURL(blob):'';
     if(!text&&!blob){this.closeModal();this.setHint('没有录到内容');return;}
     this.recording=false;this.paused=false;this.holdMode=false;
-    var l=document.getElementById('recHoldLbl');if(l)l.textContent='按住 说话';
     if(this.timer){clearInterval(this.timer);this.timer=null;}
     if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
     if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
