@@ -984,6 +984,14 @@ var Data={
   saveTrash:function(){LS.set('trash',this.trash);},
   saveProfile:function(){LS.set('profile',this.profile);},
   saveSettings:function(){LS.set('settings',this.settings);},
+  // 用户开始记录后，清除所有示例（seed:true）数据，只保留用户自己的
+  clearSeed:function(){
+    var had=false;
+    if(this.notes.some(function(n){return n.seed;})){this.notes=this.notes.filter(function(n){return !n.seed;});had=true;}
+    if(this.cards.some(function(c){return c.seed;})){this.cards=this.cards.filter(function(c){return !c.seed;});had=true;}
+    if(had){this.saveNotes();this.saveCards();}
+    return had;
+  },
   noteById:function(id){for(var i=0;i<this.notes.length;i++)if(this.notes[i].id===id)return this.notes[i];return null;},
   trashById:function(id){for(var i=0;i<this.trash.length;i++)if(this.trash[i].id===id)return this.trash[i];return null;}
 };
@@ -1470,6 +1478,7 @@ var Rec={
       created:Date.now(),synced:false
     };
     Data.notes.unshift(note);Data.saveNotes();
+    if(Data.clearSeed())toast('已为你清除示例数据');
     if(d.audio)IDB.put('audio',note.id,d.audio);
     Cloud.pushNote(note);
     this.draft=null;this.clearCache();$('#draftBox').classList.add('hidden');
@@ -1778,6 +1787,7 @@ var Leaf={
       color2:['#5E8C6C','#A87B58','#6F87AD','#A87288','#7C9A72','#9A8763'][Math.floor(Math.random()*6)],
       tags:extractKeywords(title,3),created:Date.now()};
     Data.cards.unshift(card);Data.saveCards();
+    if(Data.clearSeed())toast('已为你清除示例数据');
     $('#pasteText').value='';this.togglePaste();
     if(this.pf!=='all'&&this.pf!==plat)this.setPf('all');else this.render();
     // 视频素材：直链可抓取首帧作为封面（跨域允许时生效，否则保留平台预览图或占位）
@@ -2365,7 +2375,7 @@ function seed(){
      text:'很多人问我怎么克服拖延。我的答案可能有点反直觉：不要对抗拖延，要降低启动成本。把"写一篇文章"改成"打开备忘录说三句话"，启动成本一旦降到零，行动就自然发生了。拖延的本质不是懒，是任务太模糊。',
      tags:['拖延','行动','效率','写作','心理'],date:mk(0),words:0,hasAudio:false,imgCount:0,created:Date.now(),synced:false}
   ];
-  Data.notes.forEach(function(n){n.words=n.text.length;});
+  Data.notes.forEach(function(n){n.words=n.text.length;n.seed=true;});
   Data.cards=[
     {id:uid(),title:'5:30起床的第100天，我的生活发生了什么变化',author:'慢愈手记',url:'https://www.xiaohongshu.com/search_result?keyword=%E6%97%A9%E8%B5%B7',platform:'小红书',hot:'3.2万',tags:['早起','自律'],color:'#8FAF9A',color2:'#5E8C6C',cover:'',created:Date.now()},
     {id:uid(),title:'自媒体选题从哪来？我用这个方法囤了200个',author:'内容手艺人',url:'https://www.xiaohongshu.com/search_result?keyword=%E9%80%89%E9%A2%98',platform:'小红书',hot:'1.8万',tags:['选题','自媒体'],color:'#C9A88C',color2:'#A87B58',cover:'',created:Date.now()-1000},
@@ -2375,14 +2385,22 @@ function seed(){
     {id:uid(),title:'普通人做抖音真的能赚到钱吗？半年实测复盘',author:'老陈说运营',url:'https://www.douyin.com/search/%E6%8A%96%E9%9F%B3%E5%AE%9E%E6%B5%8B',platform:'抖音',hot:'8.7万',tags:['抖音','运营'],color:'#CBA3B0',color2:'#A87288',cover:'',created:Date.now()-5000},
     {id:uid(),title:'凌晨四点的菜市场｜慢下来才看得见的烟火气',author:'城市漫游者',url:'https://channels.weixin.qq.com/',platform:'视频号',hot:'2.1万',tags:['生活','记录'],color:'#A8BFA0',color2:'#7C9A72',cover:'',created:Date.now()-6000}
   ];
+  Data.cards.forEach(function(c){c.seed=true;});
   Data.saveNotes();Data.saveCards();
-  LS.set('seeded',true);
+  LS.set('seeded',true);LS.set('seedMarked',true);
 }
 
 /* ================= 启动 ================= */
 (function boot(){
   Data.load();
   seed();
+  // 迁移：旧版示例数据无 seed 标记，首次启动新版本时统一打上（此时仅含示例，无用户真实数据）
+  if(LS.get('seeded',false)&&!LS.get('seedMarked',false)){
+    Data.notes.forEach(function(n){n.seed=true;});
+    Data.cards.forEach(function(c){c.seed=true;});
+    Data.saveNotes();Data.saveCards();
+    LS.set('seedMarked',true);
+  }
   Me.applyTheme();
   Me.render();
   Rec.init();
