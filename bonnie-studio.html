@@ -783,7 +783,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.8.6</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.8.7</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -836,7 +836,8 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     <div style="margin-bottom:6px">
       <label class="fl" style="margin:0">配图 <span id="dtImgCount" style="font-weight:400"></span></label>
     </div>
-    <div class="imgs" id="dtImgs" style="margin-bottom:18px"></div>
+    <div class="imgs" id="dtImgs" style="margin-bottom:10px"></div>
+    <button class="btn btn-s btn-o" style="width:100%" onclick="document.getElementById('dtImgFile').click()"><svg><use href="#i-img"/></svg>添加图片</button>
     <input type="file" id="dtImgFile" accept="image/*" multiple class="hidden" onchange="Detail.pickImgs(this)">
     <div class="fl-row" style="margin-top:6px"><label class="fl">文字稿</label><button class="btn btn-s btn-o" onclick="Detail.batchReplace()"><svg><use href="#i-wand"/></svg>批量替换</button></div>
     <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()" onclick="Detail.focusAtCursor(event)"></textarea>
@@ -2132,7 +2133,6 @@ var Detail={
         return '<div class="it"><img src="'+src+'" alt="" onclick="Detail.preview(\''+i+'\')">'+
           '<button class="rm" onclick="Detail.rmImg('+i+')"><svg><use href="#i-x"/></svg></button></div>';
       }).join('');
-      if(arr.length<9)h+='<div class="add" onclick="document.getElementById(\'dtImgFile\').click()"><svg><use href="#i-plus"/></svg><span>添加图片</span></div>';
       $('#dtImgs').innerHTML=h;
     });
   },
