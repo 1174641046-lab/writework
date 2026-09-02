@@ -414,6 +414,8 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .rec-draft-text:focus{border-color:var(--green)}
 .rec-modal.review .rec-draft-text{white-space:pre-wrap}
 .rec-regen{display:flex;align-items:center;justify-content:center;gap:6px}
+.rec-title-opts{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 10px}
+.rec-title-opts .chip{cursor:pointer;max-width:100%}
 .btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
 /* ========== 森林页面（新增） ========== */
 .page-forest{height:calc(100vh - 54px - 70px);flex-direction:column;position:relative;overflow:hidden;padding:0 !important}
@@ -857,7 +859,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.10</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.11</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1881,10 +1883,23 @@ var Rec={
     var d=this.draft;if(!d)return;
     $('#draftTitle').value=d.title;
     $('#draftText').value=d.text;
+    this._titleOpts=genTitleOptions(d.text);
+    var ob=$('#draftTitleOpts');
+    if(ob){
+      var oh='';
+      (this._titleOpts||[]).forEach(function(o,i){oh+='<span class="chip g" onclick="Rec.pickTitle('+i+')">'+esc(o)+'</span>';});
+      ob.innerHTML=oh;
+    }
     var h='';
     (d.tags||[]).forEach(function(t,i){h+='<span class="chip x" onclick="Rec.rmTag('+i+')">#'+esc(t)+' <svg class="ico" style="width:10px;height:10px"><use href="#i-x"/></svg></span>';});
     h+='<span class="chip g" onclick="Rec.addTag()">+ 标签</span>';
     $('#draftTags').innerHTML=h;
+  },
+  pickTitle:function(i){
+    var o=this._titleOpts&&this._titleOpts[i];
+    if(!o)return;
+    $('#draftTitle').value=o;
+    this.draft.title=o;
   },
   addTag:function(){
     var t=prompt('输入标签');if(!t)return;
@@ -2987,6 +3002,7 @@ function seed(){
         <div class="rec-pop-hd"><span class="rec-dot ok"></span><span class="t">整理一下</span></div>
         <div id="draftAudioBox" class="hidden" style="margin-bottom:10px"></div>
         <input type="text" id="draftTitle" class="rec-draft-title" placeholder="标题">
+        <div class="rec-title-opts" id="draftTitleOpts"></div>
         <textarea id="draftText" class="rec-draft-text" placeholder="文字稿"></textarea>
         <div class="chips" id="draftTags" style="margin:8px 0 2px"></div>
         <div class="rec-pop-btns">
