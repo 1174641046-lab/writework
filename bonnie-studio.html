@@ -411,7 +411,6 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .rec-draft-text{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:15px;line-height:1.7;background:var(--card2);color:var(--text);min-height:120px;margin-bottom:4px;box-sizing:border-box;resize:vertical;outline:none}
 .rec-draft-text:focus{border-color:var(--green)}
 .rec-modal.review .rec-draft-text{white-space:pre-wrap}
-.rec-regen{display:flex;align-items:center;justify-content:center;gap:6px}
 .rec-title-opts{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 10px}
 .rec-title-opts .chip{cursor:pointer;max-width:100%}
 .rec-tag-sugs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
@@ -859,7 +858,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.18</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.19</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1842,6 +1841,26 @@ var Rec={
     }catch(e){}
   },
   regen:function(){if(!this.draft)return;this.autoGen();toast('已重新拟标题');},
+  aiPunct:function(){
+    var d=this.draft;if(!d)return;
+    var txt=($('#draftText').value||'').trim();
+    if(!txt){toast('没有可优化的文字');return;}
+    var base=(Data.settings.whisperProxy||'').replace(/\/transcribe\/?$/,'');
+    if(!base){toast('未配置 Whisper 代理地址');return;}
+    var btn=document.getElementById('aiPunctBtn');
+    if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>优化中…';}
+    var self=this;
+    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标点';}};
+    fetch(base+'/punctuate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json().catch(function(){return r.text().then(function(t){return {text:t};});});})
+      .then(function(j){
+        var t=((j&&j.text)||'').trim();
+        if(t){self.draft.text=t;$('#draftText').value=t;self.cacheDraft();self.onDraftText();toast('已优化标点');}
+        else toast('未返回内容，保持原文');
+        restore();
+      })
+      .catch(function(e){toast('AI 标点失败：'+(e&&e.message||e));restore();});
+  },
   showDraft:function(){
     this.openModal();
     var m=document.getElementById('recModal');if(m)m.classList.add('review');
@@ -3034,7 +3053,10 @@ function seed(){
           <button class="btn btn-ghost" onclick="Rec.copyText()"><svg><use href="#i-copy"/></svg>复制</button>
           <button class="btn btn-p" onclick="Rec.save()">完成</button>
         </div>
-        <button class="btn btn-ghost rec-regen" style="width:100%;margin-top:8px" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟标题与标签</button>
+        <div class="rec-pop-btns" style="margin-top:8px">
+          <button class="btn btn-ghost" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟</button>
+          <button class="btn btn-ghost" id="aiPunctBtn" onclick="Rec.aiPunct()"><svg><use href="#i-wand"/></svg>AI 标点</button>
+        </div>
       </div>
     </div>
   </div>
