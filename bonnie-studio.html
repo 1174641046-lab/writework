@@ -107,11 +107,11 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .chip.g{background:var(--card2);color:var(--text2);border:1px dashed var(--line)}
 
 /* ---------- 今日待办 ---------- */
-.today{background:linear-gradient(135deg,var(--green) 0%,#3E6449 100%);color:#fff;border-radius:var(--r);padding:15px 16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(79,122,91,.24)}
+.today{background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,var(--green) 0%,#3E6449 100%) border-box;border:2px solid transparent;color:var(--text);border-radius:var(--r);padding:15px 16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(79,122,91,.12)}
 .today h2{font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:10px}
-.today h2 svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2}
-.today .n{background:rgba(255,255,255,.22);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.5;margin-left:24px}
-.today h2 .tc-fold{margin-left:auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:rgba(255,255,255,.85);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.today h2 svg{width:17px;height:17px;stroke:var(--green);fill:none;stroke-width:2}
+.today .n{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.5;margin-left:24px}
+.today h2 .tc-fold{margin-left:auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:var(--text3);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
 .today-full.collapsed .tc-body{display:none!important}
 .today-full.collapsed{padding-top:10px;padding-bottom:8px}
 .today-full.collapsed h2{margin-bottom:0}
@@ -131,14 +131,14 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .overview-card .ov-stats .os-label{font-size:11px;color:var(--text3);margin-top:2px}
 .overview-card .ov-art{width:80px;flex-shrink:0;opacity:.85}
 .overview-card .ov-art svg{width:100%;height:auto}
-.ti{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.13);margin-bottom:6px}
+.ti{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:10px;background:var(--card2);margin-bottom:6px}
 .ti:last-child{margin-bottom:0}
-.ti.od{background:rgba(208,80,60,.32)}
+.ti.od{background:rgba(216,67,21,.10)}
 .ti .bd{flex:1;min-width:0;font-size:13px;line-height:1.45}
 .ti .bd b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ti .bd em{font-style:normal;font-size:11px;opacity:.85}
-.ti .go{flex:none;background:rgba(255,255,255,.9);color:#3E6449;border:none;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px;font-family:inherit}
-.ti.od .go{background:#fff;color:#B0402E}
+.ti .go{flex:none;background:var(--green-l);color:var(--green);border:none;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px;font-family:inherit}
+.ti.od .go{background:var(--danger);color:#fff}
 
 /* 首页两列卡片：数据统计 + 今日待办 */
 .top-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;align-items:stretch}
@@ -178,10 +178,6 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .qc-title{font-size:22px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:6px}
 .qc-sub{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:20px;padding:0 4px}
 .qc-actions{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
-.rec-hold{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:16px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;color:#fff;background:var(--green);margin-bottom:12px;user-select:none;-webkit-user-select:none;touch-action:none;transition:transform .08s,background .15s;box-shadow:0 6px 18px rgba(46,125,50,.25)}
-.rec-hold svg{width:21px;height:21px}
-.rec-hold.on{background:#1B5E20;transform:scale(.985)}
-.rec-hold.cancel{background:var(--danger)}
 .qc-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
 .qc-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
 .qc-btn:first-child{background:var(--green);color:#fff;box-shadow:0 4px 16px rgba(46,125,50,.28)}
@@ -588,12 +584,10 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <div class="qc-head">QUICK CAPTURE · 灵感入口</div>
       <div class="qc-title">想到什么，先说下来。</div>
       <div class="qc-sub">不用打字，不用整理，先把灵感留下。<br>灵感集帮你把它变成知识。</div>
-      <button class="qc-btn rec-hold" id="recHoldBtn" onpointerdown="Rec.holdDown(event)" onpointermove="Rec.holdMove(event)" onpointerup="Rec.holdUp(event)" onpointercancel="Rec.holdCancelEv(event)"><svg><use href="#i-mic"/></svg><span id="recHoldLbl">按住 说话</span></button>
       <div class="qc-actions">
         <button class="qc-btn" id="recBtn" onclick="Rec.start()"><svg><use href="#i-mic"/></svg>开始录音识别</button>
         <button class="qc-btn qc-btn-ghost" onclick="Rec.tab('text');$('#pane-text').classList.remove('hidden');$('#pane-voice').classList.add('hidden');document.getElementById('directText').focus()"><svg><use href="#i-plus"/></svg>输入灵感</button>
       </div>
-      <div class="qc-tip">微信式：按住录音，松手结束，上滑取消</div>
       <div class="qc-tip">进入灵想集的第一件事，就是留下此刻的灵感</div>
       <!-- 隐藏的原有面板（录音中/结果） -->
       <div id="pane-voice" class="hidden">
@@ -863,7 +857,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.14</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.16</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1858,6 +1852,19 @@ var Rec={
   clearCache:function(){
     try{localStorage.removeItem('wb_draft');}catch(e){}
   },
+  restoreDraft:function(){
+    try{
+      var c=LS.get('draft');
+      if(!c||(!c.text&&!c.title))return;
+      if(c.at&&(Date.now()-c.at>24*3600*1000)){this.clearCache();return;}
+      this.draft={text:c.text||'',audio:null,audioUrl:'',title:c.title||'',tags:c.tags||[]};
+      this.mode='builtin';this.holdMode=false;this.recording=false;this.paused=false;
+      this.showDraft();
+      var src=document.getElementById('draftSrc');
+      if(src)src.textContent=c.hadAudio?'上次草稿已恢复（录音未缓存，仅文字）':'上次未完成的草稿已恢复';
+      toast('已恢复上次未完成的草稿');
+    }catch(e){}
+  },
   regen:function(){if(!this.draft)return;this.autoGen();toast('已重新拟标题');},
   showDraft:function(){
     this.openModal();
@@ -2006,6 +2013,7 @@ var Rec={
 
 /* ================= 渲染 ================= */
 var Render={
+  _tc:true,
   all:function(){this.overview();this.today();this.notes(2);this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();},
   header:function(){
     var p=Data.profile;
@@ -2031,6 +2039,7 @@ var Render={
     // 没有待办（全部完成/无需处理）时整卡自动隐藏
     if(!items.length){box.style.display='none';box.innerHTML='';return;}
     box.style.display='';
+    box.classList.toggle('collapsed',!!this._tc);
     var collapsed=!!this._tc;
     var h='<h2 onclick="Render.toggleToday(event)" style="cursor:pointer">'+
           '<svg><use href="#i-clock"/></svg>今日待办'+
@@ -3002,6 +3011,7 @@ function seed(){
     });
   }
   // 恢复上次未保存的草稿
+  Rec.restoreDraft();
   var dc=LS.get('draft',null);
   if(dc&&(dc.text||dc.title)){
     Rec.draft={text:dc.text||'',audio:null,audioUrl:'',title:dc.title||'',tags:dc.tags||[]};
