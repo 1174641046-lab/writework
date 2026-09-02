@@ -419,6 +419,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .rec-tag-sugs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
 .rec-tag-sugs .chip{cursor:pointer}
 .sug-lbl{font-size:11px;color:var(--text3);align-self:center}
+.rec-src{font-size:11px;color:var(--text3);margin:-6px 0 10px}
 .btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
 /* ========== 森林页面（新增） ========== */
 .page-forest{height:calc(100vh - 54px - 70px);flex-direction:column;position:relative;overflow:hidden;padding:0 !important}
@@ -862,7 +863,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.13</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.14</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1874,6 +1875,8 @@ var Rec={
         var t=$('#dftTm');if(t)t.textContent=fmtTime(a.currentTime)+' / '+fmtTime(a.duration);};
       ab._a.onended=function(){ab.querySelector('.play').innerHTML='<svg><use href="#i-play"/></svg>';};
     }else if(ab)ab.classList.add('hidden');
+    var src=document.getElementById('draftSrc');
+    if(src)src.textContent=this.draft.audio?(this.mode==='whisper'?'Whisper 转写 · 原生带标点':'浏览器实时识别 · 已自动补标点'):'';
     this.paintDraft();
   },
   play:function(btn){
@@ -3033,6 +3036,7 @@ function seed(){
       <!-- 整理：修改标题 / 标签 / 文字 -->
       <div id="recDraftArea" class="hidden">
         <div class="rec-pop-hd"><span class="rec-dot ok"></span><span class="t">整理一下</span></div>
+        <div class="rec-src" id="draftSrc"></div>
         <div id="draftAudioBox" class="hidden" style="margin-bottom:10px"></div>
         <input type="text" id="draftTitle" class="rec-draft-title" placeholder="标题">
         <div class="rec-title-opts" id="draftTitleOpts"></div>
