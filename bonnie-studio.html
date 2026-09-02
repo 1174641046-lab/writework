@@ -851,7 +851,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.3</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.4</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -932,23 +932,29 @@ function splitSentences(s){
   return arr;
 }
 function hasPunct(s){return /[，。！？、；：,.!?；…—]/.test(s);}
+// 引擎未返回标点时，按语气词/连词/长度补逗号句号；已带标点则原样返回
+function addPunct(raw){
+  raw=(raw||'').trim().replace(/\s+/g,'');
+  if(!raw)return raw;
+  if(hasPunct(raw))return raw; // 引擎已带标点（Whisper 等）
+  var out='',cnt=0;
+  var PART=/[了嘛吗呢吧啊呀哦啦咯呗嘛呵哟嘞喽]/;      // 句末语气词 -> 句号
+  var CONN=/[的着我着过且况且因为这因此所以但而且并亦即与及那则]/; // 连词/结构词 -> 逗号
+  for(var i=0;i<raw.length;i++){
+    var ch=raw[i];out+=ch;cnt++;
+    if(i<raw.length-1){
+      if(PART.test(ch)){out+='。';cnt=0;}
+      else if(cnt>=11&&CONN.test(ch)){out+='，';cnt=0;}
+      else if(cnt>=18){out+='，';cnt=0;}
+    }
+  }
+  if(!/[。！？.!?]$/.test(out))out+='。';
+  return out;
+}
 function formatTranscript(raw){
   raw=(raw||'').trim().replace(/\s+/g,'');
   if(!raw)return raw;
-  var s=raw;
-  if(!hasPunct(s)){
-    // 引擎未返回标点时，按常见虚词/长度补逗号，句末补句号
-    var out='',cnt=0;
-    for(var i=0;i<s.length;i++){
-      out+=s[i];cnt++;
-      if(i<s.length-1){
-        if(cnt>=9&&/[的了我呢吗吧啊哟着过且况且因]/.test(s[i])){out+='，';cnt=0;}
-        else if(cnt>=16){out+='，';cnt=0;}
-      }
-    }
-    if(!/[。！？.!?]$/.test(out))out+='。';
-    s=out;
-  }
+  var s=addPunct(raw);
   // 自动分段：按句拆分，控制每段长度
   var sentences=splitSentences(s),paras=[],cur='',len=0;
   sentences.forEach(function(sen){cur+=sen;len+=sen.length;if(len>=46){paras.push(cur);cur='';len=0;}});
@@ -1614,6 +1620,7 @@ var Rec={
     var pb=document.getElementById('recPauseBtn');if(pb)pb.textContent='暂停';
     this.timer=setInterval(function(){this.sec++;this.renderLive();var ws=this.popWave();if(ws)ws.forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});}.bind(this),1000);
   },
+  togglePause:function(){ if(this.paused)this.resume(); else this.pause(); },
   done:function(){
     if(!this.recording)return;
     this._stopReason='done';
@@ -1648,7 +1655,7 @@ var Rec={
   setPopState:function(s){var e=document.getElementById('recPopState');if(e)e.textContent=s;},
   popWave:function(){return document.querySelectorAll('#recPopWave i');},
   renderLive:function(){
-    var t=this.finalText||'',it=this.interim||'';
+    var t=addPunct(this.finalText||''),it=this.interim||'';
     var box=document.getElementById('recPopText');
     if(box)box.innerHTML=(t||it)?(esc(t)+(it?'<span class="rec-interim">'+esc(it)+'</span>':'')+'<span class="rec-caret"></span>'):'<span class="rec-ph">正在聆听，说点什么…</span>';
     var tm=document.getElementById('recPopTime');if(tm)tm.textContent=fmtTime(this.sec);
@@ -1735,7 +1742,7 @@ var Rec={
         if(t){
           var fb=(self.fullChunks&&self.fullChunks.length)?new Blob(self.fullChunks,{type:(self.fullChunks[0].type||'audio/webm')}):blob;
           var fu=fb?URL.createObjectURL(fb):'';
-          self.draft={text:self.finalText,audio:fb,audioUrl:fu,title:'',tags:[]};
+          self.draft={text:formatTranscript(self.finalText),audio:fb,audioUrl:fu,title:'',tags:[]};
           self.closeModal();self.recording=false;self.paused=false;
           if(self.timer){clearInterval(self.timer);self.timer=null;}
           if(self.segTimer){clearInterval(self.segTimer);self.segTimer=null;}
@@ -2877,7 +2884,7 @@ function seed(){
       <div class="rec-pop-wave" id="recPopWave"></div>
       <div class="rec-pop-text" id="recPopText"><span class="rec-ph">正在聆听，说点什么…</span></div>
       <div class="rec-pop-btns">
-        <button class="btn" id="recPauseBtn" onclick="Rec.pause()">暂停</button>
+        <button class="btn" id="recPauseBtn" onclick="Rec.togglePause()">暂停</button>
         <button class="btn btn-p" onclick="Rec.done()">完成</button>
         <button class="btn btn-ghost" onclick="Rec.cancelRec()">取消</button>
       </div>
