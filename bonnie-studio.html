@@ -828,7 +828,14 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
           <input type="text" id="whisperModel" placeholder="gpt-4o-transcribe" onchange="Me.saveWhisper()">
         </div>
       </div>
-      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。</div>
+      <div class="row" style="display:block;margin-top:10px">
+        <div class="lb" style="margin-bottom:7px"><b>AI 标点</b><span>用 AI 给文字稿加标点、按语义分段（整理弹窗里可手动点「AI 标点」）</span></div>
+        <div class="seg" id="autoPunctSeg" style="width:100%">
+          <button data-a="off" onclick="Me.saveAutoPunct(false)">手动</button>
+          <button data-a="on" onclick="Me.saveAutoPunct(true)">存稿前自动</button>
+        </div>
+      </div>
+      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。AI 标点走同一代理，失败时按原文保存。</div>
     </div>
 
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
@@ -858,7 +865,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.19</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.20</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1057,7 +1064,7 @@ var IDB=(function(){
 
 /* ================= 数据模型 ================= */
 var Data={
-  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'https://lingxiangji.onlyvideoget.workers.dev/transcribe',whisperModel:'gpt-4o-transcribe'},
+  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'https://lingxiangji.onlyvideoget.workers.dev/transcribe',whisperModel:'gpt-4o-transcribe',autoPunct:false},
   load:function(){
     this.notes=LS.get('notes',[]);
     this.cards=LS.get('cards',[]);
@@ -1841,25 +1848,39 @@ var Rec={
     }catch(e){}
   },
   regen:function(){if(!this.draft)return;this.autoGen();toast('已重新拟标题');},
+  _punctBase:function(){
+    var base=(Data.settings.whisperProxy||'').replace(/\/transcribe\/?$/,'');
+    return (base&&/^https?:\/\//.test(base))?base:'';
+  },
+  _punctRequest:function(text,ok,fail){
+    var base=this._punctBase();
+    if(!base){fail&&fail(new Error('未配置 Whisper 代理地址'));return;}
+    var settled=false;
+    var to=setTimeout(function(){if(!settled){settled=true;fail&&fail(new Error('请求超时'));}},20000);
+    fetch(base+'/punctuate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json().catch(function(){return r.text().then(function(t){return {text:t};});});})
+      .then(function(j){
+        if(settled)return;settled=true;clearTimeout(to);
+        var t=((j&&j.text)||'').trim();
+        if(t)ok&&ok(t);else fail&&fail(new Error('未返回内容'));
+      })
+      .catch(function(e){
+        if(settled)return;settled=true;clearTimeout(to);
+        fail&&fail(e);
+      });
+  },
   aiPunct:function(){
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    var base=(Data.settings.whisperProxy||'').replace(/\/transcribe\/?$/,'');
-    if(!base){toast('未配置 Whisper 代理地址');return;}
+    if(!this._punctBase()){toast('未配置 Whisper 代理地址');return;}
     var btn=document.getElementById('aiPunctBtn');
     if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>优化中…';}
     var self=this;
     var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标点';}};
-    fetch(base+'/punctuate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})})
-      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json().catch(function(){return r.text().then(function(t){return {text:t};});});})
-      .then(function(j){
-        var t=((j&&j.text)||'').trim();
-        if(t){self.draft.text=t;$('#draftText').value=t;self.cacheDraft();self.onDraftText();toast('已优化标点');}
-        else toast('未返回内容，保持原文');
-        restore();
-      })
-      .catch(function(e){toast('AI 标点失败：'+(e&&e.message||e));restore();});
+    this._punctRequest(txt,function(t){
+      self.draft.text=t;$('#draftText').value=t;self.cacheDraft();self.onDraftText();toast('已优化标点');restore();
+    },function(){toast('AI 标点失败，保持原文');restore();});
   },
   showDraft:function(){
     this.openModal();
@@ -1987,6 +2008,25 @@ var Rec={
     d.title=$('#draftTitle').value.trim();
     d.text=$('#draftText').value.trim();
     if(!d.text&&!d.audio){toast('内容为空');return;}
+    var self=this;
+    if(Data.settings.autoPunct&&d.text&&this._punctBase()){
+      var sb=document.getElementById('recSaveBtn');
+      if(sb){sb.disabled=true;sb.textContent='AI 标点优化中…';}
+      this._punctRequest(d.text,function(t){
+        if(t){self.draft.text=t;$('#draftText').value=t;}
+        if(sb){sb.disabled=false;sb.textContent='完成';}
+        self._doSave();
+      },function(){
+        if(sb){sb.disabled=false;sb.textContent='完成';}
+        toast('AI 标点失败，按原文保存');
+        self._doSave();
+      });
+      return;
+    }
+    this._doSave();
+  },
+  _doSave:function(){
+    var d=this.draft;if(!d)return;
     if(!d.title){d.tags=extractKeywords(d.text,5);d.title=genTitle(d.text,d.tags);}
     var note={
       id:uid(),rid:'',title:d.title||'未命名灵感',text:d.text,
@@ -2830,6 +2870,8 @@ var Me={
     if(am==='cloud'||am==='custom'){am='whisper';Data.settings.asrMode='whisper';Data.saveSettings();}
     $$('#asrSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===am);});
     $('#asrCustomOpts').style.display=(am==='whisper')?'block':'none';
+    var ap=!!Data.settings.autoPunct;
+    $$('#autoPunctSeg button').forEach(function(b){b.classList.toggle('on',(b.dataset.a==='on')===ap);});
   },
   saveASR:function(mode){
     Data.settings.asrMode=mode;Data.saveSettings();
@@ -2843,6 +2885,11 @@ var Me={
     Data.settings.whisperModel=($('#whisperModel').value||'').trim()||'gpt-4o-transcribe';
     Data.saveSettings();
     toast(Data.settings.whisperProxy?'Whisper 代理已保存':'已切换回浏览器内置识别');
+  },
+  saveAutoPunct:function(on){
+    Data.settings.autoPunct=!!on;Data.saveSettings();
+    $$('#autoPunctSeg button').forEach(function(b){b.classList.toggle('on',(b.dataset.a==='on')===!!on);});
+    toast(on?'已开启：存稿前自动优化标点':'AI 标点改为手动（整理弹窗里点「AI 标点」）');
   },
   saveName:function(v){Data.profile.name=v.trim()||'Bonnie';Data.saveProfile();Render.header();this.render();},
   pickAvatar:function(inp){
@@ -3051,7 +3098,7 @@ function seed(){
         <div class="rec-pop-btns">
           <button class="btn" id="recDiscardBtn" onclick="Rec.askDiscard()">放弃</button>
           <button class="btn btn-ghost" onclick="Rec.copyText()"><svg><use href="#i-copy"/></svg>复制</button>
-          <button class="btn btn-p" onclick="Rec.save()">完成</button>
+          <button class="btn btn-p" id="recSaveBtn" onclick="Rec.save()">完成</button>
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
           <button class="btn btn-ghost" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟</button>
