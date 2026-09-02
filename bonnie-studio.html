@@ -404,6 +404,8 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .rec-pop-btns .btn{flex:1}
 .rec-pop{max-height:90vh;overflow:auto;-webkit-overflow-scrolling:touch}
 .rec-dot.ok{background:var(--green);animation:none}
+.rec-modal.busy .rec-dot{background:var(--brown);animation:blink .8s infinite}
+.rec-modal.busy .rec-pop-wave i{animation:none;height:6px;opacity:.35}
 .rec-draft-title{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:15px;font-weight:600;background:var(--card2);color:var(--text);margin-bottom:10px;box-sizing:border-box;outline:none}
 .rec-draft-title:focus{border-color:var(--green)}
 .rec-draft-text{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:15px;line-height:1.7;background:var(--card2);color:var(--text);min-height:120px;margin-bottom:4px;box-sizing:border-box;resize:vertical;outline:none}
@@ -857,7 +859,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.17</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.18</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1662,8 +1664,9 @@ var Rec={
     this.discard();
   },
   openModal:function(){
-    var m=document.getElementById('recModal');if(m){m.classList.remove('hidden');m.classList.remove('review');}
-    var la=document.getElementById('recLiveArea');if(la)la.classList.remove('hidden');
+    var m=document.getElementById('recModal');if(m){m.classList.remove('hidden');m.classList.remove('review');m.classList.remove('busy');}
+    var la=document.getElementById('recLiveArea');
+    if(la){la.classList.remove('hidden');var bts=la.querySelectorAll('.rec-pop-btns .btn');for(var i=0;i<bts.length;i++)bts[i].disabled=false;}
     var da=document.getElementById('recDraftArea');if(da)da.classList.add('hidden');
     this._askDiscard=false;
     if(this._discardTimer){clearTimeout(this._discardTimer);this._discardTimer=null;}
@@ -1674,6 +1677,12 @@ var Rec={
   },
   closeModal:function(){var m=document.getElementById('recModal');if(m)m.classList.add('hidden');},
   setPopState:function(s){var e=document.getElementById('recPopState');if(e)e.textContent=s;},
+  setLiveBusy:function(on){
+    var m=document.getElementById('recModal');if(m)m.classList.toggle('busy',!!on);
+    var area=document.getElementById('recLiveArea');
+    if(area){var bs=area.querySelectorAll('.rec-pop-btns .btn');for(var i=0;i<bs.length;i++)bs[i].disabled=!!on;}
+    if(on)this.setPopState('Whisper 转写中…');
+  },
   popWave:function(){return document.querySelectorAll('#recPopWave i');},
   renderLive:function(){
     var t=addPunct(this.finalText||''),it=this.interim||'';
@@ -1749,6 +1758,7 @@ var Rec={
     var url=Data.settings.whisperProxy;
     if(!url){if(finishAfter)this.finish(blob);else this.setHint('未配置 Whisper 代理地址，已保留原识别');return;}
     this.setHint('正在用 Whisper 转写…');
+    if(finishAfter)this.setLiveBusy(true);
     var fd=new FormData();fd.append('file',blob,'rec.webm');fd.append('model',Data.settings.whisperModel||'gpt-4o-transcribe');
     fetch(url,{method:'POST',body:fd}).then(function(r){
       if(!r.ok)throw new Error('HTTP '+r.status);
