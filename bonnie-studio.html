@@ -383,6 +383,23 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(14px);background:rgba(32,30,26,.94);color:#fff;padding:11px 20px;border-radius:12px;font-size:13.5px;z-index:300;opacity:0;transition:.24s;pointer-events:none;max-width:86%;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .hidden{display:none !important}
+/* ---------- 录音弹窗（微信式实时字幕） ---------- */
+.rec-modal{display:flex;align-items:center;background:rgba(20,18,15,.5)}
+.rec-pop{background:var(--card);width:100%;max-width:420px;border-radius:22px;padding:22px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popin .22s cubic-bezier(.32,.72,0,1)}
+@keyframes popin{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.rec-pop-hd{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:12px}
+.rec-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);animation:blink 1.1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.rec-pop-hd .t{color:var(--text);font-weight:600;flex:1}
+.rec-pop-hd .tm{font-variant-numeric:tabular-nums;color:var(--text3)}
+.rec-pop-wave{display:flex;align-items:flex-end;gap:3px;height:46px;margin:4px 0 14px;justify-content:center}
+.rec-pop-wave i{flex:0 0 3px;height:8px;background:var(--green);border-radius:2px;opacity:.65;transition:height .12s}
+.rec-pop-text{background:var(--card2);border-radius:14px;padding:14px;min-height:112px;max-height:220px;overflow:auto;font-size:15px;line-height:1.85;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.rec-ph{color:var(--text3)}
+.rec-interim{color:var(--text3)}
+.rec-caret{display:inline-block;width:2px;height:15px;background:var(--green);vertical-align:-2px;margin-left:1px;animation:blink 1s infinite}
+.rec-pop-btns{display:flex;gap:9px;margin-top:16px}
+.rec-pop-btns .btn{flex:1}
 /* ========== 森林页面（新增） ========== */
 .page-forest{height:calc(100vh - 54px - 70px);flex-direction:column;position:relative;overflow:hidden;padding:0 !important}
 .page-forest.on{display:flex}
@@ -550,7 +567,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <div class="qc-title">想到什么，先说下来。</div>
       <div class="qc-sub">不用打字，不用整理，先把灵感留下。<br>灵感集帮你把它变成知识。</div>
       <div class="qc-actions">
-        <button class="qc-btn" id="recBtn" onclick="Rec.toggle()"><svg><use href="#i-mic"/></svg>开始录音识别</button>
+        <button class="qc-btn" id="recBtn" onclick="Rec.start()"><svg><use href="#i-mic"/></svg>开始录音识别</button>
         <button class="qc-btn qc-btn-ghost" onclick="Rec.tab('text');$('#pane-text').classList.remove('hidden');$('#pane-voice').classList.add('hidden');document.getElementById('directText').focus()"><svg><use href="#i-plus"/></svg>输入灵感</button>
       </div>
       <div class="qc-tip">进入灵想集的第一件事，就是留下此刻的灵感</div>
@@ -791,13 +808,12 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <div class="lb" style="margin-bottom:7px"><b>识别模式</b><span>选择语音转文字的方式</span></div>
         <div class="seg" id="asrSeg" style="width:100%">
           <button data-a="builtin" onclick="Me.saveASR('builtin')" class="on">浏览器内置</button>
-          <button data-a="cloud" onclick="Me.saveASR('cloud')">云端增强（免费）</button>
-          <button data-a="custom" onclick="Me.saveASR('custom')">自定义代理</button>
+          <button data-a="whisper" onclick="Me.saveASR('whisper')">Whisper 代理</button>
         </div>
       </div>
       <div id="asrCustomOpts" style="display:none;margin-top:10px">
         <div class="row" style="display:block">
-          <div class="lb" style="margin-bottom:7px"><b>自定义代理地址</b><span>自建代理或第三方 ASR 接口（需支持 CORS）</span></div>
+          <div class="lb" style="margin-bottom:7px"><b>Whisper 代理地址</b><span>用你自己的 OpenAI 转写，更准且不限次数（已预填默认地址）</span></div>
           <input type="text" id="whisperProxy" placeholder="https://你的代理.workers.dev/transcribe" onchange="Me.saveWhisper()">
         </div>
         <div class="row" style="display:block;margin-top:4px">
@@ -805,7 +821,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
           <input type="text" id="whisperModel" placeholder="whisper-1" onchange="Me.saveWhisper()">
         </div>
       </div>
-      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 可能不准。云端增强：使用免费公共 ASR 接口，更准确，每日约10次免费。自定义代理：用自己的 Whisper/ASR 服务。</div>
+      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。</div>
     </div>
 
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
@@ -1026,7 +1042,7 @@ var IDB=(function(){
 
 /* ================= 数据模型 ================= */
 var Data={
-  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'',whisperModel:'whisper-1'},
+  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'https://lingxiangji.onlyvideoget.workers.dev/transcribe',whisperModel:'whisper-1'},
   load:function(){
     this.notes=LS.get('notes',[]);
     this.cards=LS.get('cards',[]);
@@ -1508,7 +1524,7 @@ var Forest={
 
 /* ================= 录音识别 ================= */
 var Rec={
-  mr:null,stream:null,chunks:[],timer:null,sec:0,recording:false,
+  mr:null,stream:null,chunks:[],timer:null,segTimer:null,sec:0,recording:false,paused:false,mode:'builtin',fullChunks:[],_flush:false,_stopReason:'',_finalAccum:'',_srFinal:'',
   sr:null,srOn:false,finalText:'',interim:'',
   draft:null, /* {text,audio:Blob|null,audioUrl,title,tags} */
   tab:function(t){
@@ -1518,41 +1534,126 @@ var Rec={
   },
   supported:function(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);},
   init:function(){
-    var w=$('#wave'),h='';
+    var h='';
     for(var i=0;i<22;i++)h+='<i></i>';
-    w.innerHTML=h;
+    var w=$('#wave');if(w)w.innerHTML=h;
+    var pw=$('#recPopWave');if(pw)pw.innerHTML=h;
   },
-  toggle:function(){this.recording?this.stop():this.start();},
+  toggle:function(){if(!this.recording)this.start();},
   start:function(){
     var self=this;
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-      toast('当前环境无法调用麦克风，可直接输入文字');Rec.tab('text');return;
-    }
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('当前环境无法调用麦克风，可直接输入文字');return;}
+    this.mode=(Data.settings.asrMode==='whisper')?'whisper':'builtin';
+    this._finalAccum='';this._srFinal='';
     navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
-      self.stream=st;
-      try{self.mr=new MediaRecorder(st);}catch(e){throw e;}
-      self.chunks=[];
-      self.mr.ondataavailable=function(e){if(e.data&&e.data.size)self.chunks.push(e.data);};
-      self.mr.onstop=function(){
-        var blob=new Blob(self.chunks,{type:self.mr.mimeType||'audio/webm'});
-        self.finish(blob);
-      };
-      self.mr.start();
-      self.recording=true;self.sec=0;self.finalText='';
-      $('#recBtn').classList.add('on');
-      $('#recBtn').innerHTML='<svg><use href="#i-stop"/></svg>停止录音';
-      $('#pane-voice').classList.remove('hidden');$('#recTime').textContent='00:00';
-      self.startSR();
+      self.stream=st;self.recording=true;self.paused=false;self.sec=0;self.finalText='';self.interim='';
+      self.fullChunks=[];self._flush=false;self._stopReason='';
+      self.newSeg();
+      if(self.mode==='builtin')self.startSR();
+      else self.segTimer=setInterval(function(){self.flushSeg();},4000);
+      self.openModal();
       self.timer=setInterval(function(){
-        self.sec++;
-        $('#recTime').textContent=fmtTime(self.sec);
-        $$('#wave i').forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});
+        self.sec++;self.renderLive();
+        var ws=self.popWave();if(ws)ws.forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});
       },1000);
-    }).catch(function(e){
-      toast('麦克风不可用，请检查权限或直接输入文字');
-      Rec.tab('text');
-    });
+      self.renderLive();
+    }).catch(function(e){toast('麦克风不可用，请检查权限或直接输入文字');});
   },
+  newSeg:function(){
+    var self=this;
+    try{this.mr=new MediaRecorder(this.stream);}catch(e){this.mr=null;return;}
+    this.chunks=[];
+    this.mr.ondataavailable=function(e){if(e.data&&e.data.size)self.chunks.push(e.data);};
+    this.mr.onstop=function(){self.onStop();};
+    try{this.mr.start();}catch(e){}
+  },
+  onStop:function(){
+    var self=this;
+    if(!this.mr)return;
+    var blob=new Blob(this.chunks,{type:this.mr.mimeType||'audio/webm'});
+    this.fullChunks.push(blob);
+    if(this._flush){
+      this._flush=false;
+      if(this._stopReason==='segment'&&this.recording&&!this.paused){
+        this.sendWhisper(blob,false);
+        var slf=this;setTimeout(function(){slf.newSeg();},150);
+      }else{
+        this.sendWhisper(blob,true);
+      }
+      return;
+    }
+    if(this._stopReason==='cancel'){this.afterCancel();return;}
+    var finalBlob=this.fullChunks.length>1?new Blob(this.fullChunks,{type:blob.type}):blob;
+    if(this.mode==='whisper'&&!this.finalText)this.sendWhisper(finalBlob,true);
+    else this.finish(finalBlob);
+  },
+  flushSeg:function(){
+    if(!this.recording||this.paused||!this.mr||this.mr.state!=='recording')return;
+    this._flush=true;this._stopReason='segment';
+    try{this.mr.stop();}catch(e){this._flush=false;}
+  },
+  pause:function(){
+    if(!this.recording||this.paused)return;
+    this.paused=true;this._finalAccum=this.finalText;
+    if(this.mr&&this.mr.pause)try{this.mr.pause();}catch(e){}
+    this.stopSR();
+    if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
+    if(this.timer){clearInterval(this.timer);this.timer=null;}
+    this.setPopState('已暂停');
+    var pb=document.getElementById('recPauseBtn');if(pb)pb.textContent='继续';
+    this.setHint('已暂停，点「继续」接着录');
+    var ws=this.popWave();if(ws)ws.forEach(function(b){b.style.height='6px';});
+  },
+  resume:function(){
+    if(!this.recording||!this.paused)return;
+    this.paused=false;
+    if(this.mr&&this.mr.resume)try{this.mr.resume();}catch(e){}
+    if(this.mode==='builtin')this.startSR();
+    else this.segTimer=setInterval(function(){this.flushSeg();}.bind(this),4000);
+    this.setPopState('录音中…');
+    var pb=document.getElementById('recPauseBtn');if(pb)pb.textContent='暂停';
+    this.timer=setInterval(function(){this.sec++;this.renderLive();var ws=this.popWave();if(ws)ws.forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});}.bind(this),1000);
+  },
+  done:function(){
+    if(!this.recording)return;
+    this._stopReason='done';
+    if(this.mode==='whisper')this._flush=true;
+    if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
+    this.stopSR();
+    if(this.mr&&this.mr.state!=='inactive'){try{this.mr.stop();}catch(e){this.onStop();}}
+    else this.onStop();
+  },
+  cancelRec:function(){
+    this._stopReason='cancel';
+    if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
+    this.stopSR();
+    if(this.mr&&this.mr.state!=='inactive'){try{this.mr.stop();}catch(e){this.afterCancel();}}
+    else this.afterCancel();
+  },
+  afterCancel:function(){
+    this.recording=false;this.paused=false;
+    if(this.timer){clearInterval(this.timer);this.timer=null;}
+    if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
+    if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
+    this.closeModal();
+    this.discard();
+  },
+  openModal:function(){
+    var m=document.getElementById('recModal');if(m)m.classList.remove('hidden');
+    var w=document.getElementById('recPopWave');if(w){var h='';for(var i=0;i<22;i++)h+='<i></i>';w.innerHTML=h;}
+    this.setPopState('录音中…');
+    var pb=document.getElementById('recPauseBtn');if(pb)pb.textContent='暂停';
+  },
+  closeModal:function(){var m=document.getElementById('recModal');if(m)m.classList.add('hidden');},
+  setPopState:function(s){var e=document.getElementById('recPopState');if(e)e.textContent=s;},
+  popWave:function(){return document.querySelectorAll('#recPopWave i');},
+  renderLive:function(){
+    var t=this.finalText||'',it=this.interim||'';
+    var box=document.getElementById('recPopText');
+    if(box)box.innerHTML=(t||it)?(esc(t)+(it?'<span class="rec-interim">'+esc(it)+'</span>':'')+'<span class="rec-caret"></span>'):'<span class="rec-ph">正在聆听，说点什么…</span>';
+    var tm=document.getElementById('recPopTime');if(tm)tm.textContent=fmtTime(this.sec);
+  },
+  setHint:function(s){var h=document.getElementById('recHint');if(h)h.textContent=s;},
   stop:function(){
     var self=this;
     this.recording=false;
@@ -1576,76 +1677,77 @@ var Rec={
       this.sr.continuous=true;
       this.sr.interimResults=true;
       this.sr.maxAlternatives=1;
-      // 优化：提高识别质量
       if(this.sr.setGrammarConstraints)this.sr.setGrammarConstraints([]);
+      this._srFinal='';
       this.sr.onresult=function(ev){
         var fin='',inter='';
         for(var i=0;i<ev.results.length;i++){
           var t=ev.results[i][0].transcript;
           if(ev.results[i].isFinal)fin+=t; else inter+=t;
         }
-        self.finalText=fin;self.interim=inter;
-        var shown=fin+inter;
-        if(shown)$('#recTime').textContent='已识别 '+shown.length+' 字';
+        self._srFinal=fin;
+        self.finalText=(self._finalAccum?self._finalAccum+(fin?'\n':'')+fin:fin);
+        self.interim=inter;
+        self.renderLive();
+        if(self.finalText)self.setHint('已识别 '+self.finalText.length+' 字');
       };
       this.sr.onerror=function(e){
-        // 自动重试常见错误
         if(e.error==='no-speech'||e.error==='aborted')return;
         console.warn('SR error:',e.error);
       };
       this.sr.onend=function(){
-        // 如果还在录音中，自动重启（处理超时断开）
-        if(self.recording&&self.srOn){try{self.sr.start();}catch(e){self.srOn=false;}}
+        if(self.recording&&!self.paused&&self.srOn){try{self.sr.start();}catch(e){self.srOn=false;}}
       };
       this.sr.start();this.srOn=true;
     }catch(e){this.sr=null;}
   },
   stopSR:function(){if(this.sr&&this.srOn){try{this.sr.stop();}catch(e){}this.srOn=false;}},
   finish:function(blob){
-    var text=formatTranscript((this.finalText||this.interim||'').trim());
+    var text=formatTranscript((this.finalText||'').trim());
+    if(!text&&this.interim)text=formatTranscript(this.interim.trim());
     var url=blob?URL.createObjectURL(blob):'';
-    if(!text&&!blob){toast('没有录到内容');return;}
+    if(!text&&!blob){this.closeModal();this.setHint('没有录到内容');return;}
+    this.closeModal();
+    this.recording=false;this.paused=false;
+    if(this.timer){clearInterval(this.timer);this.timer=null;}
+    if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
+    if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
     this.draft={text:text,audio:blob,audioUrl:url,title:'',tags:[]};
     this.showDraft();
-    if(text){this.autoGen();}else{
-      $('#recHint').textContent='录音已保存，请补充文字稿';
-      Rec.tab('text');
-      $('#directText').value='';
-    }
-    if(blob&&(Data.settings.asrMode!=='builtin'))this.whisper(blob);
+    if(text)this.autoGen();else this.setHint('录音已保存，请补充文字稿');
   },
-  whisper:function(blob){
+  sendWhisper:function(blob,finishAfter){
     var self=this;
-    var mode=Data.settings.asrMode||'builtin';
-    if(mode==='builtin'){return;} // 内置模式不调用云端
-    $('#recHint').textContent='正在用云端 ASR 精修转写…';
-    var fd=new FormData();
-    fd.append('file',blob,'rec.webm');
-    fd.append('engine','whisper');
-    fd.append('language','zh');
-
-    var url, extraFields;
-    if(mode==='cloud'){
-      // 免费公共 ASR：NoteTakers（无需 API Key，支持 CORS）
-      url='https://notetakers.vipresearch.ca/stt/v1/transcribe';
-      extraFields='';
-    }else{
-      // 自定义代理
-      url=Data.settings.whisperProxy;
-      if(!url){$('#recHint').textContent='未配置代理地址，已保留原识别';return;}
-      fd.append('model',Data.settings.whisperModel||'whisper-1');
-      extraFields='';
-    }
-
+    var url=Data.settings.whisperProxy;
+    if(!url){if(finishAfter)this.finish(blob);else this.setHint('未配置 Whisper 代理地址，已保留原识别');return;}
+    this.setHint('正在用 Whisper 转写…');
+    var fd=new FormData();fd.append('file',blob,'rec.webm');fd.append('model',Data.settings.whisperModel||'whisper-1');
     fetch(url,{method:'POST',body:fd}).then(function(r){
       if(!r.ok)throw new Error('HTTP '+r.status);
       return r.json().catch(function(){return r.text().then(function(t){return {text:t};});});
     }).then(function(j){
       var t=((j&&j.text)||'').trim();
-      if(t){self.draft.text=t;self.showDraft();self.autoGen();toast('云端转写完成');}
-      else{$('#recHint').textContent='云端未返回文字，已保留原识别';}
+      if(t){
+        if(self.mode==='whisper')self.finalText=(self.finalText?self.finalText+'\n':'')+t;
+        self.renderLive();
+      }
+      if(finishAfter){
+        if(t){
+          var fb=(self.fullChunks&&self.fullChunks.length)?new Blob(self.fullChunks,{type:(self.fullChunks[0].type||'audio/webm')}):blob;
+          var fu=fb?URL.createObjectURL(fb):'';
+          self.draft={text:self.finalText,audio:fb,audioUrl:fu,title:'',tags:[]};
+          self.closeModal();self.recording=false;self.paused=false;
+          if(self.timer){clearInterval(self.timer);self.timer=null;}
+          if(self.segTimer){clearInterval(self.segTimer);self.segTimer=null;}
+          if(self.stream){self.stream.getTracks().forEach(function(tr){tr.stop();});self.stream=null;}
+          self.showDraft();self.autoGen();toast('Whisper 转写完成');
+        }else self.finish(blob);
+      }else if(!t){
+        self.setHint('Whisper 未返回文字，已保留原识别');
+      }
     }).catch(function(e){
-      $('#recHint').textContent='云端转写失败（'+(e&&e.message||e)+'），已保留原识别';
+      if(finishAfter)self.finish(blob);
+      else self.setHint('Whisper 转写失败：'+(e&&e.message||e)+'，已保留原识别');
     });
   },
   fromDirect:function(){
@@ -1668,7 +1770,8 @@ var Rec={
     this.showDraft();
     $('#recHint').textContent='已导入音频，请补充文字稿';
     inp.value='';
-    if(Data.settings.asrMode!=='builtin')this.whisper(f);
+    this.mode=(Data.settings.asrMode==='whisper')?'whisper':'builtin';
+    if(this.mode==='whisper')this.sendWhisper(f,true);
   },
   autoGen:function(){
     var d=this.draft;if(!d)return;
@@ -2566,18 +2669,20 @@ var Me={
     var tc=Data.trash.length;
     $('#trashCnt').textContent=tc?'已删除 '+tc+' 条备忘录':'回收站为空';
     var wp=Data.settings.whisperProxy||'';
+    if(!wp){Data.settings.whisperProxy='https://lingxiangji.onlyvideoget.workers.dev/transcribe';Data.saveSettings();wp=Data.settings.whisperProxy;}
     if($('#whisperProxy'))$('#whisperProxy').value=wp;
     if($('#whisperModel'))$('#whisperModel').value=Data.settings.whisperModel||'whisper-1';
     // ASR 模式
     var am=Data.settings.asrMode||'builtin';
+    if(am==='cloud'||am==='custom'){am='whisper';Data.settings.asrMode='whisper';Data.saveSettings();}
     $$('#asrSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===am);});
-    $('#asrCustomOpts').style.display=(am==='custom')?'block':'none';
+    $('#asrCustomOpts').style.display=(am==='whisper')?'block':'none';
   },
   saveASR:function(mode){
     Data.settings.asrMode=mode;Data.saveSettings();
     $$('#asrSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===mode);});
-    $('#asrCustomOpts').style.display=(mode==='custom')?'block':'none';
-    var labels={builtin:'浏览器内置（零配置）',cloud:'云端增强（免费ASR）',custom:'自定义代理'};
+    $('#asrCustomOpts').style.display=(mode==='whisper')?'block':'none';
+    var labels={builtin:'浏览器内置（零配置）',whisper:'Whisper 代理（更准/不限次）'};
     toast('已切换为：'+labels[mode]);
   },
   saveWhisper:function(){
@@ -2765,5 +2870,18 @@ function seed(){
   });
 })();
 </script>
+  <!-- 录音弹窗：按下录音后弹出，实时显示字幕，支持暂停/继续 -->
+  <div id="recModal" class="mask rec-modal hidden">
+    <div class="rec-pop">
+      <div class="rec-pop-hd"><span class="rec-dot"></span><span class="t" id="recPopState">录音中…</span><span class="tm" id="recPopTime">00:00</span></div>
+      <div class="rec-pop-wave" id="recPopWave"></div>
+      <div class="rec-pop-text" id="recPopText"><span class="rec-ph">正在聆听，说点什么…</span></div>
+      <div class="rec-pop-btns">
+        <button class="btn" id="recPauseBtn" onclick="Rec.pause()">暂停</button>
+        <button class="btn btn-p" onclick="Rec.done()">完成</button>
+        <button class="btn btn-ghost" onclick="Rec.cancelRec()">取消</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
