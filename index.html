@@ -859,7 +859,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.7</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.8</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -940,19 +940,21 @@ function splitSentences(s){
   return arr;
 }
 function hasPunct(s){return /[，。！？、；：,.!?；…—]/.test(s);}
-// 引擎未返回标点时，按语气词/连词/长度补逗号句号；已带标点则原样返回
+// 引擎未返回标点时，按语气词/连词/长度补标点；已带标点则原样返回
 function addPunct(raw){
   raw=(raw||'').trim().replace(/\s+/g,'');
   if(!raw)return raw;
   if(hasPunct(raw))return raw; // 引擎已带标点（Whisper 等）
   var out='',cnt=0;
-  var PART=/[了嘛吗呢吧啊呀哦啦咯呗嘛呵哟嘞喽]/;      // 句末语气词 -> 句号
-  var CONN=/[的着我着过且况且因为这因此所以但而且并亦即与及那则]/; // 连词/结构词 -> 逗号
+  var Q=/[吗呢哪咋]/;                                  // 疑问语气词 -> 问号
+  var E=/[了啦咯呗呵哟嘞喔哇]/;                        // 陈述/舒缓尾 -> 句号
+  var CONN=/[的着我着过且况且因为这因此所以但而且并亦即与及那则就也还都又却]/; // 连词/结构词 -> 逗号
   for(var i=0;i<raw.length;i++){
     var ch=raw[i];out+=ch;cnt++;
     if(i<raw.length-1){
-      if(PART.test(ch)){out+='。';cnt=0;}
-      else if(cnt>=11&&CONN.test(ch)){out+='，';cnt=0;}
+      if(Q.test(ch)){out+='？';cnt=0;}
+      else if(E.test(ch)){out+='。';cnt=0;}
+      else if(cnt>=10&&CONN.test(ch)){out+='，';cnt=0;}
       else if(cnt>=18){out+='，';cnt=0;}
     }
   }
