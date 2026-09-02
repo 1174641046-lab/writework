@@ -862,7 +862,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.12</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.13</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1911,6 +1911,22 @@ var Rec={
     if(!t)return;
     if((this.draft.tags||[]).indexOf(t)<0)this.draft.tags.push(t);
     this.paintDraft();
+  },
+  onDraftText:function(){
+    var self=this;
+    if(this._draftTimer2)clearTimeout(this._draftTimer2);
+    this._draftTimer2=setTimeout(function(){
+      if(!self.draft)return;
+      self.draft.text=$('#draftText').value;
+      self._tagOpts=extractKeywords(self.draft.text,9).filter(function(t){return (self.draft.tags||[]).indexOf(t)<0;}).slice(0,5);
+      var sb=$('#draftTagSugs');
+      if(sb){
+        var sh='';
+        if(self._tagOpts.length)sh+='<span class="sug-lbl">推荐</span>';
+        self._tagOpts.forEach(function(t,i){sh+='<span class="chip g" onclick="Rec.addSugTag('+i+')">+ '+esc(t)+'</span>';});
+        sb.innerHTML=sh;
+      }
+    },400);
   },
   pickTitle:function(i){
     var o=this._titleOpts&&this._titleOpts[i];
@@ -3020,7 +3036,7 @@ function seed(){
         <div id="draftAudioBox" class="hidden" style="margin-bottom:10px"></div>
         <input type="text" id="draftTitle" class="rec-draft-title" placeholder="标题">
         <div class="rec-title-opts" id="draftTitleOpts"></div>
-        <textarea id="draftText" class="rec-draft-text" placeholder="文字稿"></textarea>
+        <textarea id="draftText" class="rec-draft-text" placeholder="文字稿" oninput="Rec.onDraftText()"></textarea>
         <div class="chips" id="draftTags" style="margin:8px 0 2px"></div>
         <div class="rec-tag-sugs" id="draftTagSugs"></div>
         <div class="rec-pop-btns">
