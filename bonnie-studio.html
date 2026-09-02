@@ -406,6 +406,14 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .rec-caret{display:inline-block;width:2px;height:15px;background:var(--green);vertical-align:-2px;margin-left:1px;animation:blink 1s infinite}
 .rec-pop-btns{display:flex;gap:9px;margin-top:16px}
 .rec-pop-btns .btn{flex:1}
+.rec-pop{max-height:90vh;overflow:auto;-webkit-overflow-scrolling:touch}
+.rec-dot.ok{background:var(--green);animation:none}
+.rec-draft-title{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:15px;font-weight:600;background:var(--card2);color:var(--text);margin-bottom:10px;box-sizing:border-box;outline:none}
+.rec-draft-title:focus{border-color:var(--green)}
+.rec-draft-text{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:15px;line-height:1.7;background:var(--card2);color:var(--text);min-height:120px;margin-bottom:4px;box-sizing:border-box;resize:vertical;outline:none}
+.rec-draft-text:focus{border-color:var(--green)}
+.rec-modal.review .rec-draft-text{white-space:pre-wrap}
+.rec-regen{display:flex;align-items:center;justify-content:center;gap:6px}
 /* ========== 森林页面（新增） ========== */
 .page-forest{height:calc(100vh - 54px - 70px);flex-direction:column;position:relative;overflow:hidden;padding:0 !important}
 .page-forest.on{display:flex}
@@ -514,6 +522,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></symbol>
 <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h5"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
 <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></symbol>
@@ -592,18 +601,6 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <div id="pane-text" class="hidden">
         <textarea id="directText" placeholder="把你的灵感、口播稿、想法直接写在这里……"></textarea>
         <button class="btn btn-p btn-blk" style="margin-top:10px" onclick="Rec.fromDirect()"><svg><use href="#i-wand"/></svg>生成标题与标签</button>
-      </div>
-      <div id="draftBox" class="hidden" style="text-align:left;margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
-        <div class="res-top"><b><svg><use href="#i-wand"/></svg>识别结果</b>
-          <button class="btn btn-s" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟</button></div>
-        <div id="draftAudioBox" class="hidden"></div>
-        <input type="text" id="draftTitle" placeholder="标题" style="margin-bottom:9px;font-weight:600">
-        <textarea id="draftText" style="min-height:110px;margin-bottom:9px" placeholder="文字稿"></textarea>
-        <div class="chips" id="draftTags" style="margin-bottom:12px"></div>
-        <div style="display:flex;gap:9px">
-          <button class="btn" style="flex:0 0 auto" onclick="Rec.discard()">放弃</button>
-          <button class="btn btn-p" style="flex:1" onclick="Rec.save()"><svg><use href="#i-note"/></svg>存为备忘录</button>
-        </div>
       </div>
     </div>
 
@@ -859,7 +856,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.8</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.9</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1697,7 +1694,9 @@ var Rec={
     this.discard();
   },
   openModal:function(){
-    var m=document.getElementById('recModal');if(m)m.classList.remove('hidden');
+    var m=document.getElementById('recModal');if(m){m.classList.remove('hidden');m.classList.remove('review');}
+    var la=document.getElementById('recLiveArea');if(la)la.classList.remove('hidden');
+    var da=document.getElementById('recDraftArea');if(da)da.classList.add('hidden');
     var w=document.getElementById('recPopWave');if(w){var h='';for(var i=0;i<22;i++)h+='<i></i>';w.innerHTML=h;}
     this.setPopState('录音中…');
     var pb=document.getElementById('recPauseBtn');if(pb){pb.textContent='暂停';pb.style.display='';}
@@ -1766,7 +1765,6 @@ var Rec={
     if(!text&&this.interim)text=formatTranscript(this.interim.trim());
     var url=blob?URL.createObjectURL(blob):'';
     if(!text&&!blob){this.closeModal();this.setHint('没有录到内容');return;}
-    this.closeModal();
     this.recording=false;this.paused=false;this.holdMode=false;
     var l=document.getElementById('recHoldLbl');if(l)l.textContent='按住 说话';
     if(this.timer){clearInterval(this.timer);this.timer=null;}
@@ -1796,7 +1794,7 @@ var Rec={
           var fb=(self.fullChunks&&self.fullChunks.length)?new Blob(self.fullChunks,{type:(self.fullChunks[0].type||'audio/webm')}):blob;
           var fu=fb?URL.createObjectURL(fb):'';
           self.draft={text:formatTranscript(self.finalText),audio:fb,audioUrl:fu,title:'',tags:[]};
-          self.closeModal();self.recording=false;self.paused=false;
+          self.recording=false;self.paused=false;
           if(self.timer){clearInterval(self.timer);self.timer=null;}
           if(self.segTimer){clearInterval(self.segTimer);self.segTimer=null;}
           if(self.stream){self.stream.getTracks().forEach(function(tr){tr.stop();});self.stream=null;}
@@ -1852,7 +1850,10 @@ var Rec={
   },
   regen:function(){if(!this.draft)return;this.autoGen();toast('已重新拟标题');},
   showDraft:function(){
-    $('#draftBox').classList.remove('hidden');
+    this.openModal();
+    var m=document.getElementById('recModal');if(m)m.classList.add('review');
+    var la=document.getElementById('recLiveArea');if(la)la.classList.add('hidden');
+    var da=document.getElementById('recDraftArea');if(da)da.classList.remove('hidden');
     var ab=$('#draftAudioBox');
     if(this.draft.audioUrl){
       ab.classList.remove('hidden');
@@ -1863,7 +1864,7 @@ var Rec={
         ab.querySelector('input').value=(a.currentTime/a.duration*100);
         var t=$('#dftTm');if(t)t.textContent=fmtTime(a.currentTime)+' / '+fmtTime(a.duration);};
       ab._a.onended=function(){ab.querySelector('.play').innerHTML='<svg><use href="#i-play"/></svg>';};
-    }else ab.classList.add('hidden');
+    }else if(ab)ab.classList.add('hidden');
     this.paintDraft();
   },
   play:function(btn){
@@ -1887,9 +1888,23 @@ var Rec={
   },
   rmTag:function(i){this.draft.tags.splice(i,1);this.paintDraft();},
   discard:function(){
-    this.draft=null;this.clearCache();$('#draftBox').classList.add('hidden');
+    this.draft=null;this.clearCache();this.closeModal();
     $('#recTime').textContent='00:00';$('#recHint').textContent='点下方按钮开始录音，自动转成文字';
     $('#directText').value='';
+  },
+  copyText:function(){
+    var d=this.draft;if(!d||!d.text){toast('没有可复制的文字');return;}
+    var txt=d.text;
+    var done=function(){toast('已复制文字稿');};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done,function(){Rec._fallbackCopy(txt,done);});
+    }else Rec._fallbackCopy(txt,done);
+  },
+  _fallbackCopy:function(txt,cb){
+    try{
+      var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);cb&&cb();
+    }catch(e){toast('复制失败，请手动选择');}
   },
   save:function(){
     var d=this.draft;if(!d)return;
@@ -1908,7 +1923,7 @@ var Rec={
     if(d.audio)IDB.put('audio',note.id,d.audio);
     Render.all();
     try{Cloud.pushNote(note);}catch(e){}
-    this.draft=null;this.clearCache();$('#draftBox').classList.add('hidden');
+    this.draft=null;this.clearCache();this.closeModal();
     $('#recTime').textContent='00:00';$('#recHint').textContent='点下方按钮开始录音，自动转成文字';
     $('#directText').value='';
     toast('已存为备忘录');
@@ -2930,16 +2945,33 @@ function seed(){
   });
 })();
 </script>
-  <!-- 录音弹窗：按下录音后弹出，实时显示字幕，支持暂停/继续 -->
+  <!-- 录音弹窗：按下录音后弹出，实时显示字幕；讲完后切到整理态，可改标题/标签，点完成才存稿 -->
   <div id="recModal" class="mask rec-modal hidden">
     <div class="rec-pop">
-      <div class="rec-pop-hd"><span class="rec-dot"></span><span class="t" id="recPopState">录音中…</span><span class="tm" id="recPopTime">00:00</span></div>
-      <div class="rec-pop-wave" id="recPopWave"></div>
-      <div class="rec-pop-text" id="recPopText"><span class="rec-ph">正在聆听，说点什么…</span></div>
-      <div class="rec-pop-btns">
-        <button class="btn" id="recPauseBtn" onclick="Rec.togglePause()">暂停</button>
-        <button class="btn btn-p" onclick="Rec.done()">完成</button>
-        <button class="btn btn-ghost" onclick="Rec.cancelRec()">取消</button>
+      <!-- 录音中 -->
+      <div id="recLiveArea">
+        <div class="rec-pop-hd"><span class="rec-dot"></span><span class="t" id="recPopState">录音中…</span><span class="tm" id="recPopTime">00:00</span></div>
+        <div class="rec-pop-wave" id="recPopWave"></div>
+        <div class="rec-pop-text" id="recPopText"><span class="rec-ph">正在聆听，说点什么…</span></div>
+        <div class="rec-pop-btns">
+          <button class="btn" id="recPauseBtn" onclick="Rec.togglePause()">暂停</button>
+          <button class="btn btn-p" onclick="Rec.done()">讲完了</button>
+          <button class="btn btn-ghost" onclick="Rec.cancelRec()">取消</button>
+        </div>
+      </div>
+      <!-- 整理：修改标题 / 标签 / 文字 -->
+      <div id="recDraftArea" class="hidden">
+        <div class="rec-pop-hd"><span class="rec-dot ok"></span><span class="t">整理一下</span></div>
+        <div id="draftAudioBox" class="hidden" style="margin-bottom:10px"></div>
+        <input type="text" id="draftTitle" class="rec-draft-title" placeholder="标题">
+        <textarea id="draftText" class="rec-draft-text" placeholder="文字稿"></textarea>
+        <div class="chips" id="draftTags" style="margin:8px 0 2px"></div>
+        <div class="rec-pop-btns">
+          <button class="btn" onclick="Rec.discard()">放弃</button>
+          <button class="btn btn-ghost" onclick="Rec.copyText()"><svg><use href="#i-copy"/></svg>复制</button>
+          <button class="btn btn-p" onclick="Rec.save()">完成</button>
+        </div>
+        <button class="btn btn-ghost rec-regen" style="width:100%;margin-top:8px" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟标题与标签</button>
       </div>
     </div>
   </div>
