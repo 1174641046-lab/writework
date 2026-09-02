@@ -396,7 +396,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .rec-pop-hd .tm{font-variant-numeric:tabular-nums;color:var(--text3)}
 .rec-pop-wave{display:flex;align-items:flex-end;gap:3px;height:46px;margin:4px 0 14px;justify-content:center}
 .rec-pop-wave i{flex:0 0 3px;height:8px;background:var(--green);border-radius:2px;opacity:.65;transition:height .12s}
-.rec-pop-text{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;min-height:112px;max-height:220px;overflow:auto;font-size:15px;line-height:1.85;color:var(--text);white-space:pre-wrap;word-break:break-word;box-shadow:inset 0 1px 4px rgba(0,0,0,.04)}
+.rec-pop-text{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;min-height:112px;max-height:220px;overflow:auto;font-size:16px;line-height:1.85;color:var(--text);white-space:pre-wrap;word-break:break-word;box-shadow:inset 0 1px 4px rgba(0,0,0,.04)}
 .rec-ph{color:var(--text3)}
 .rec-interim{color:var(--text3);font-style:italic}
 .rec-caret{display:inline-block;width:2px;height:15px;background:var(--green);vertical-align:-2px;margin-left:1px;animation:blink 1s infinite}
@@ -853,7 +853,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.5</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.6</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1662,6 +1662,7 @@ var Rec={
     var t=addPunct(this.finalText||''),it=this.interim||'';
     var box=document.getElementById('recPopText');
     if(box)box.innerHTML=(t||it)?(esc(t)+(it?'<span class="rec-interim">'+esc(it)+'</span>':'')+'<span class="rec-caret"></span>'):'<span class="rec-ph">正在聆听，说点什么…</span>';
+    if(box)box.scrollTop=box.scrollHeight;
     var tm=document.getElementById('recPopTime');if(tm)tm.textContent=fmtTime(this.sec);
   },
   setHint:function(s){var h=document.getElementById('recHint');if(h)h.textContent=s;},
