@@ -152,7 +152,7 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .today-compact .ti .bd em{font-size:10.5px}
 
 /* 通知栏 / 列表滑动项 */
-.swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px;contain:layout paint}
+.swipe{position:relative;overflow:hidden;border-radius:10px;margin-bottom:6px;contain:layout paint;clip-path:inset(0 round 10px)}
 .swipe:last-child{margin-bottom:0}
 .sw-del{position:absolute;left:0;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:13px;font-weight:600;border-radius:inherit}
 .sw-del.right{left:auto;right:0}
@@ -210,6 +210,7 @@ html[data-theme="dark"] .play{color:#12200F}
 .audio-box .tm{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
 
 /* ---------- 备忘录列表 ---------- */
+#memoListFull,#noteList{overflow:hidden;border-radius:var(--r)}
 .note{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s;border-left:3px solid transparent;position:relative;display:flex;gap:12px;align-items:flex-start}
 .note:active{transform:scale(.99)}
 .note.st-写作中{border-left-color:var(--brown)}
@@ -228,6 +229,11 @@ html[data-theme="dark"] .play{color:#12200F}
 .badge{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--card2);color:var(--text2);font-weight:600}
 .badge.g{background:var(--green-l);color:var(--green)}
 .badge.b{background:var(--brown-l);color:var(--brown)}
+/* 卡片内图片缩略图 */
+.card-imgs{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.card-imgs .ci-thumb{width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--card2);flex:none}
+.card-imgs .ci-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-imgs .ci-more{width:48px;height:48px;border-radius:6px;background:var(--green-l);color:var(--green);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
 
 /* ---------- 统计 ---------- */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -282,22 +288,37 @@ html[data-theme="dark"] .hcell.l4{background:var(--green);color:#12200F}
 .wbody .au .del{color:var(--text3);flex:none;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer}
 .wbody .au .del svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
 
-/* ---------- 枝条关键词云 ---------- */
-.graph-wrap{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 12px;position:relative;overflow:hidden}
-.kw-cloud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:120px}
-.kw-chip{border:none;background:var(--green-l);color:var(--green);font-family:inherit;font-weight:600;line-height:1.1;padding:7px 12px;border-radius:16px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s;-webkit-tap-highlight-color:transparent}
-.kw-chip i{font-style:normal;font-size:10px;opacity:.7;background:rgba(255,255,255,.45);border-radius:8px;padding:0 5px}
-.kw-chip.hot{background:var(--brown-l);color:var(--brown)}
-.kw-chip.on{outline:2px solid var(--green);outline-offset:1px}
-.kw-chip:active{transform:scale(.96)}
-.cloud-empty{width:100%;text-align:center;color:var(--text3);font-size:13px;line-height:1.7;padding:24px 0}
-.kw-rel{display:flex;flex-wrap:wrap;gap:7px}
-.kw-rel-i{background:var(--card2);border:1px solid var(--line);color:var(--text2);font-size:12.5px;padding:5px 11px;border-radius:14px;cursor:pointer}
-.kw-rel-i:active{transform:scale(.96)}
-.glegend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12px;color:var(--text2)}
-.glegend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
-.glegend{display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--text2);margin-top:10px;flex-wrap:wrap}
-.glegend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+/* ---------- 枝条知识图谱（放射状思维导图） ---------- */
+.graph-tip{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--green-l);color:var(--green);border-radius:10px;font-size:12.5px;line-height:1.5;margin-bottom:12px}
+.graph-tip svg{width:16px;height:16px;flex:none;stroke:var(--green);fill:none;stroke-width:2}
+.graph-toolbar{display:flex;gap:6px;margin-bottom:10px;justify-content:flex-end}
+.gtb-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text2);font-size:11.5px;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
+.gtb-btn:active{transform:scale(.96)}
+.gtb-btn svg{flex:none}
+.graph-svg-wrap{width:100%;min-height:300px;background:var(--card2);border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative}
+.graph-svg-wrap svg{width:100%;height:auto;display:block;min-height:300px}
+.graph-bottom{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;gap:12px}
+.graph-legend{display:flex;gap:14px;flex:1;flex-wrap:wrap;font-size:11px;color:var(--text2);align-items:center}
+.graph-legend .gl-item{display:flex;align-items:center;gap:4px}
+.graph-legend .gl-line{width:20px;height:0;border-top:2px solid var(--green)}
+.graph-legend .gl-line.dash{border-top-style:dashed}
+.graph-legend .gl-line.dot{border-top-style:dotted}
+.graph-preview{width:70px;height:50px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card2);flex:none}
+.graph-preview svg{width:100%;height:100%}
+/* 图谱节点样式（SVG内） */
+.gnode-center{fill:var(--green);cursor:pointer}
+.gnode-center text{fill:#fff;font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.gnode-primary{fill:var(--green-l);stroke:var(--green);stroke-width:1.5;cursor:pointer}
+.gnode-primary text{fill:var(--text);font-size:11px;font-weight:600;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.gnode-primary.sel{fill:var(--green);stroke:var(--green)}
+.gnode-primary.sel text{fill:#fff}
+.gnode-secondary{fill:var(--card);stroke:var(--line);stroke-width:1;cursor:pointer}
+.gnode-secondary text{fill:var(--text2);font-size:10px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.gnode-secondary.sel{fill:var(--green-l);stroke:var(--green)}
+.gnode-secondary.sel text{fill:var(--green);font-weight:600}
+.gedge-strong{stroke:var(--green);stroke-width:1.8;fill:none}
+.gedge-medium{stroke:var(--green);stroke-width:1.2;fill:none;stroke-dasharray:5,3}
+.gedge-weak{stroke:var(--text3);stroke-width:1;fill:none;stroke-dasharray:2,3}
 
 /* ---------- 设置 ---------- */
 .me-hd{display:flex;align-items:center;gap:14px;padding:18px 16px}
@@ -490,6 +511,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5.6 5h12.8l2.6 8v5H3v-5z"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
 <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L5 11a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4z"/></symbol>
+<symbol id="i-funnel" viewBox="0 0 24 24"><polygon points="22,3 10,13 10,21 14,21 14,13 2,3"/></symbol>
 <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
 </defs></svg>
 
@@ -638,16 +660,22 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
   <!-- ============ 枝条 ============ -->
   <section class="page" id="page-branch">
-    <div class="sec-t"><h2><svg><use href="#i-branch"/></svg>关键词图谱</h2><span id="graphInfo"></span></div>
-    <div class="card" style="padding:12px">
-      <div class="tip" style="background:var(--green-l);color:var(--green)">
-        <svg><use href="#i-branch"/></svg>
-        <div>词越大代表出现越多。点任意关键词，看它关联的备忘录和常一起出现的词，顺着枝条找灵感缺口。</div>
+    <div class="sec-t"><h2><svg><use href="#i-branch"/></svg>知识图谱</h2><span id="graphInfo"></span></div>
+    <div class="card" style="padding:12px;overflow:hidden">
+      <div class="graph-tip"><svg><use href="#i-branch"/></svg><span>基于标签与内容的智能关联，让灵感之间产生连接，形成知识网络</span></div>
+      <div class="graph-toolbar" id="graphToolbar">
+        <button class="gtb-btn" onclick="Graph.zoomIn()" title="放大"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-search"/></svg>缩放</button>
+        <button class="gtb-btn" onclick="Graph.toggleFilter()" title="筛选"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-funnel"/></svg>筛选</button>
+        <button class="gtb-btn" onclick="Graph.relayout()" title="布局"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-branch"/></svg>布局</button>
+        <button class="gtb-btn" onclick="Graph.toggleLegend()" title="图例"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-note"/></svg>图例</button>
       </div>
-      <div class="graph-wrap">
-        <div id="graph" class="kw-cloud"></div>
+      <div class="graph-svg-wrap" id="graphWrap">
+        <svg id="graph" viewBox="0 0 340 380" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
-      <div class="glegend" id="graphLegend"></div>
+      <div class="graph-bottom">
+        <div class="graph-legend" id="graphLegend"></div>
+        <div class="graph-preview" id="graphPreview"></div>
+      </div>
     </div>
     <div id="graphDetail" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
   </section>
@@ -757,17 +785,27 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       </div>
     </div>
 
-    <div class="sec-t"><h2><svg><use href="#i-mic"/></svg>语音识别（Whisper）</h2></div>
+    <div class="sec-t"><h2><svg><use href="#i-mic"/></svg>语音识别</h2></div>
     <div class="card">
       <div class="row" style="display:block">
-        <div class="lb" style="margin-bottom:7px"><b>Whisper 代理地址</b><span>自建代理，跨域调用且不在前端暴露 Key</span></div>
-        <input type="text" id="whisperProxy" placeholder="https://你的代理.workers.dev/transcribe" onchange="Me.saveWhisper()">
+        <div class="lb" style="margin-bottom:7px"><b>识别模式</b><span>选择语音转文字的方式</span></div>
+        <div class="seg" id="asrSeg" style="width:100%">
+          <button data-a="builtin" onclick="Me.saveASR('builtin')" class="on">浏览器内置</button>
+          <button data-a="cloud" onclick="Me.saveASR('cloud')">云端增强（免费）</button>
+          <button data-a="custom" onclick="Me.saveASR('custom')">自定义代理</button>
+        </div>
       </div>
-      <div class="row" style="display:block;margin-top:4px">
-        <div class="lb" style="margin-bottom:7px"><b>模型</b><span>默认 whisper-1</span></div>
-        <input type="text" id="whisperModel" placeholder="whisper-1" onchange="Me.saveWhisper()">
+      <div id="asrCustomOpts" style="display:none;margin-top:10px">
+        <div class="row" style="display:block">
+          <div class="lb" style="margin-bottom:7px"><b>自定义代理地址</b><span>自建代理或第三方 ASR 接口（需支持 CORS）</span></div>
+          <input type="text" id="whisperProxy" placeholder="https://你的代理.workers.dev/transcribe" onchange="Me.saveWhisper()">
+        </div>
+        <div class="row" style="display:block;margin-top:4px">
+          <div class="lb" style="margin-bottom:7px"><b>模型</b><span>传给代理的模型参数</span></div>
+          <input type="text" id="whisperModel" placeholder="whisper-1" onchange="Me.saveWhisper()">
+        </div>
       </div>
-      <div class="tip" style="margin-top:10px">未填写时代录仍用浏览器内置识别（iPhone 可能不准）。配置代理后，录音停止会自动用 Whisper 精修转写，更准确。</div>
+      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 可能不准。云端增强：使用免费公共 ASR 接口，更准确，每日约10次免费。自定义代理：用自己的 Whisper/ASR 服务。</div>
     </div>
 
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
@@ -797,7 +835,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.1</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.2</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -988,7 +1026,7 @@ var IDB=(function(){
 
 /* ================= 数据模型 ================= */
 var Data={
-  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',whisperProxy:'',whisperModel:'whisper-1'},
+  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'',whisperModel:'whisper-1'},
   load:function(){
     this.notes=LS.get('notes',[]);
     this.cards=LS.get('cards',[]);
@@ -1152,18 +1190,177 @@ var TITLE_TPL=[
   '{k1}的第{n}天，{k2}终于有了变化',
   '如果你也{k1}，一定要先搞清楚{k2}'
 ];
-function genTitle(text,tags){
+
+/* ========== 智能标题库：按标签分类，多平台风格 ========== */
+var TITLE_BANK={
+  /* ── 效率 / 时间管理 / 自律 ── */
+  '效率 时间管理 自律 习惯 拖延 行动 计划 目标':[
+    '坚持{k1}{n}天，我的生活发生了什么变化',
+    '为什么你总是「忙」不出成果？{k2}才是答案',
+    '从拖延症到高效达人，我只做对了这一件事',
+    '普通人如何用{k1}撬动人生？亲测{n}个月复盘',
+    '别再假装努力了！{k1}的本质不是坚持，是……',
+    '揭秘那些「不费力」的高效人，都在偷偷用{k2}',
+    '早起的{n}种好处，第3个你绝对想不到',
+    '时间管理大师？不，我只是把{k1}做到了极致',
+    '放弃{k1}后，我反而变好了（附对比）',
+    '每天{k1}10分钟，一个月后同事问我报了什么课',
+    '{k1}｜把碎片时间变成财富的{n}个方法',
+    '亲测有效：用{k2}治好了我的{k1}焦虑',
+    '从零开始{k1}：一份给新手的完整路线图',
+    '那些靠{k1}逆袭的人，都做对了什么？（深度）',
+    '关于{k1}，90%的人都搞反了'
+  ],
+  /* ── 内容创作 / 自媒体 / 写作 / 选题 ── */
+  '自媒体 选题 内容 创作 创作力 文案 标题 写作 表达 爆款 涨粉 流量 运营':[
+    '做了半年{k1}，我最想说的{n}句大实话',
+    '从0到{n}万粉丝：我的{k1}全流程拆解',
+    '为什么你的{k1}没人看？这3个误区太普遍了',
+    '{k1}新手避坑指南：我花了1万块买来的经验',
+    '别再抄爆款了！真正的{k1}应该这样做',
+    '我的第一篇{k1}爆了，然后呢？（真实数据）',
+    '{k1}焦虑？看看这{n}个普通人是怎么起步的',
+    '从选题到成文，我的一套{k1}SOP（附模板）',
+    '{k1}半年复盘：做对了3件事，错了n件',
+    '小众赛道怎么做{k1}？我的冷门但有效的策略',
+    '当{k1}遇到瓶颈期，我是这样突破的',
+    '普通人做{k1}，不要追求完美，要追求……',
+    '我的{k1}工具箱：这{n}个神器让效率翻倍',
+    '从写作恐惧到日更{k1}，我经历了什么',
+    '{k1}不是天赋，是可以训练的技能（附练习法）'
+  ],
+  /* ── 早起 / 晨间 / 作息 / 睡眠 / 健康 ── */
+  '早起 晨间 作息 睡眠 熬夜 冥想 呼吸 放松 治愈 疗愈 健康 健身 运动 跑步':[
+    '5点起床的第{n}天，身体发生了这些变化',
+    '晨间routine大公开：我如何用1小时开启高效一天',
+    '不再熬夜后，我的皮肤/精神/效率发生了什么',
+    '早起很难？试试这个「无痛{k1}」方法',
+    '坚持{k1}{n}周，我整个人都不一样了（实拍）',
+    '从夜猫子到早起党：我的{k1}过渡计划',
+    '清晨5:30，我在做什么？（沉浸式Vlog式分享）',
+    '{k1}后才发现：原来早晨的时间这么值钱',
+    '改善{k1}质量的小习惯，每个都能立刻用',
+    '为什么成功人士都{k1}？背后的科学解释',
+    '我的{k1}仪式感：{n}件小事开启美好一天',
+    '告别熬夜后，我找回了生活的掌控感',
+    '{k1}记录：{n}天的变化合集（对比图预警）'
+  ],
+  /* ── 心理 / 情绪 / 成长 / 内耗 / 焦虑 ── */
+  '情绪 焦虑 压力 内耗 内卷 消耗 疲惫 休息 恢复 平静 平衡 觉察 正念 自信 勇气 心理 成长':[
+    '停止内耗！这{n}句话治愈了我的精神内耗',
+    '当你感到{k1}时，请读读这篇文章',
+    '我从{k1}中走出来的{n}个真实方法',
+    '允许自己{k1}，才是真正的强大',
+    '那些看起来从不{k1}的人，私底下都在做什么',
+    '和{k1}和解：写给所有正在挣扎的你',
+    '为什么我们越来越容易{k1}？（深度分析）',
+    '{k1}自救指南：我试过最有效的{n}个方法',
+    '当我开始接纳{k1}，一切都变了',
+    '致所有正在经历{k1}的你：这不是你的错',
+    '从{k1}到平静：一段真实的内心旅程',
+    '别让{k1}偷走你的人生：实用行动清单'
+  ],
+  /* ── 学习 / 阅读 / 思考 / 方法 / 技巧 / 经验 ── */
+  '学习 阅读 思考 逻辑 框架 结构 方法 技巧 经验 心得 复利 积累 沉淀 输入 输出':[
+    '如何用{k1}构建自己的知识体系？（完整版）',
+    '读了{n}本{k2}书后，我发现了一个秘密',
+    '普通人如何通过{k1}实现认知跃迁',
+    '我的{k1}方法论：从入门到精通的路径图',
+    '为什么你学了那么多{k1}还是用不上？',
+    '{k1}的本质不是学更多，而是……',
+    '一套完整的{k1}SOP，直接复制就能用',
+    '通过{k1}，我在{n}个月内实现了{目标}',
+    '深度复盘：我对{k1}的理解发生了什么变化',
+    '{k1}的{n}个层次，你在哪一层？',
+    '从输入到输出：我的{k1}闭环系统',
+    '别再盲目{k1}了！先搞清楚这3个问题'
+  ],
+  /* ── 理财 / 存钱 / 消费 / 财务 / 投资 ── */
+  '理财 存钱 消费 记账 预算 省钱 投资 基金 收入 支出 财务自由 被动收入':[
+    '月薪{n}k如何存下{k1}？我的实操经验',
+    '存钱的{n}个狠招，第1个就让我省下了30%',
+    '从月光族到{n}万存款：我的{k1}之路',
+    '普通人如何通过{k1}实现第一桶金',
+    '我的{k1}复盘：做对了什么，踩了什么坑',
+    '为什么你总是存不下钱？这{n}个习惯是元凶',
+    '{k1}一年后，我的心态发生了这些变化',
+    '低薪人群的{k1}攻略：每一分钱都算数',
+    '告别消费主义后，我的生活和钱包都好了',
+    '{k1}新手入门：n分钟搞懂基础知识'
+  ],
+  /* ── 生活 / 家居 / 日常 / 仪式感 / 极简 ── */
+  '生活 日常 家居 收纳 清洁 断舍离 极简 布置 仪式感 小确幸 烘焙 烹饪 探店 旅行 摄影':[
+    '我的{k1}日常：平凡日子里的光',
+    '独居{n}年，我把日子过成了诗',
+    '极简生活后，我扔掉了这n样东西',
+    '一人食的{k1}：简单却有温度的一餐',
+    '周末{k1}vlog：慢下来的时光',
+    '我的房间不大，但每一样东西都是心头好',
+    '{k1}改造：花最少的钱让家焕然一新',
+    '独处时的{k1}：享受孤独的能力',
+    '从杂乱到整洁：我的{k1}心法',
+    '生活中的小确幸：{n}个让我幸福的瞬间'
+  ],
+  /* ── 职场 / 工作 / 自由职业 / 远程 / 人际 ── */
+  '职场 工作 加班 汇报 会议 团队 领导 升职 加薪 跳槽 面试 自由职业 远程 居家办公 人际 关系':[
+    '裸辞{n}个月后，我想说的大实话',
+    '从大厂离职后，我的{k1}生活怎么样了',
+    '职场人如何平衡{k1}和工作？（非鸡汤）',
+    '我为什么选择{k1}？{n}个真实原因',
+    '{k1}一年的得与失：收入、时间、成长',
+    '如何优雅地{k1}？我的完整准备清单',
+    '职场{k1}生存指南：说几句不好听的真话',
+    '从打工到{k1}：我的转型全记录',
+    '{k1}后我才明白：稳定是个伪命题',
+    '给想{k1}的你的{n}条真诚建议'
+  ],
+  /* ── 通用 / 万能模板（无特定标签匹配时使用） ── */
+  '_default':[
+    '关于{k1}，有些话憋很久了',
+    '{k1}｜一篇讲透我的真实体会',
+    '深聊{k1}：你可能一直理解错了',
+    '{k1}这件事，我认真研究了{n}天',
+    '跟风做了{n}天{k1}，结果出乎意料',
+    '关于{k1}，我有{n}个不成熟的小建议',
+    '{k1}初体验：新人视角的真实记录',
+    '为什么我劝你一定要{k1}？（附证据）',
+    '{k1}｜我的{n}条实战经验总结',
+    '重新理解{k1}：换个角度完全不同'
+  ]
+};
+/* 从标题库中按标签匹配 + 随机选取 */
+function genTitleSmart(text,tags){
   tags=tags||[];
   var k1=tags[0]||'灵感',k2='';
   for(var i=1;i<tags.length;i++){if(tags[i]!==k1){k2=tags[i];break;}}
   if(!k2)k2=k1==='记录'?'日常':'记录';
   var n=[3,5,7,10,21,30,100][Math.floor(Math.random()*7)];
-  var t=TITLE_TPL[Math.floor(Math.random()*TITLE_TPL.length)];
-  t=t.replace(/\{k1\}/g,k1).replace(/\{k2\}/g,k2).replace(/\{n\}/g,n);
-  // 若文字稿首句够短且像标题，优先用原句
+  // 按标签匹配标题库分类
+  var pool=[];
+  var tagSet=' '+tags.join(' ')+' ';
+  var keys=Object.keys(TITLE_BANK);
+  for(var ci=0;ci<keys.length;ci++){
+    var cat=keys[ci];
+    if(cat==='_default')continue;
+    var keywords=cat.split(' ');
+    var matchCount=0;
+    for(var ki=0;ki<keywords.length;ki++){
+      if(tagSet.indexOf(' '+keywords[ki]+' ')>=0)matchCount++;
+    }
+    if(matchCount>0)pool=pool.concat(TITLE_BANK[cat]);
+  }
+  // 如果没有匹配到任何分类，使用默认库
+  if(!pool.length)pool=TITLE_BANK['_default'];
+  // 随机选一条
+  var t=pool[Math.floor(Math.random()*pool.length)];
+  t=t.replace(/\{k1\}/g,k1).replace(/\{k2\}/g,k2).replace(/\{n\}/g,n).replace(/\{目标\}/g,k2);
+  // 若文字稿首句够短且像标题，有一定概率优先用原句
   var first=String(text||'').split(/[。！？\n]/)[0].trim();
-  if(first.length>=6&&first.length<=22&&Math.random()<0.34)return first;
+  if(first.length>=6&&first.length<=22&&Math.random()<0.25)return first;
   return t;
+}
+function genTitle(text,tags){
+  return genTitleSmart(text,tags);
 }
 /* 根据用户自填标题，生成更适自媒体发布的优化候选（纯前端启发式） */
 function genTitleOptions(raw){
@@ -1174,17 +1371,17 @@ function genTitleOptions(raw){
   var shortK=kw.length<=8?kw:raw.slice(0,8);
   var opts=[];
   function add(s){s=(s||'').trim();if(s&&opts.indexOf(s)===-1&&s.length<=30)opts.push(s);}
+  // 从智能标题库中按关键词匹配生成多个候选
+  for(var i=0;i<5;i++){
+    add(genTitleSmart(raw,kws));
+  }
+  // 补充一些通用优化模板
   add(raw+'｜一篇讲透');
   add('关于'+raw+'，这 3 点越早知道越好');
   add('别再踩'+shortK+'的坑了，试试这个思路');
   add('我终于搞懂了'+raw);
-  add('为什么'+shortK+'？真相都在这里');
-  add(raw+'，建议收藏');
-  add('新手必看：'+raw+'全攻略');
-  add('原来'+shortK+'还能这样，涨知识了');
   add(raw+'（附实操清单）');
-  add('盘点｜'+raw+'的 5 个实用方法');
-  return opts.slice(0,4);
+  return opts.slice(0,6);
 }
 
 /* ================= 云端同步 ================= */
@@ -1375,7 +1572,12 @@ var Rec={
     if(!SR)return;
     try{
       this.sr=new SR();
-      this.sr.lang='zh-CN';this.sr.continuous=true;this.sr.interimResults=true;
+      this.sr.lang='zh-CN';
+      this.sr.continuous=true;
+      this.sr.interimResults=true;
+      this.sr.maxAlternatives=1;
+      // 优化：提高识别质量
+      if(this.sr.setGrammarConstraints)this.sr.setGrammarConstraints([]);
       this.sr.onresult=function(ev){
         var fin='',inter='';
         for(var i=0;i<ev.results.length;i++){
@@ -1386,7 +1588,15 @@ var Rec={
         var shown=fin+inter;
         if(shown)$('#recTime').textContent='已识别 '+shown.length+' 字';
       };
-      this.sr.onerror=function(){};
+      this.sr.onerror=function(e){
+        // 自动重试常见错误
+        if(e.error==='no-speech'||e.error==='aborted')return;
+        console.warn('SR error:',e.error);
+      };
+      this.sr.onend=function(){
+        // 如果还在录音中，自动重启（处理超时断开）
+        if(self.recording&&self.srOn){try{self.sr.start();}catch(e){self.srOn=false;}}
+      };
       this.sr.start();this.srOn=true;
     }catch(e){this.sr=null;}
   },
@@ -1402,25 +1612,40 @@ var Rec={
       Rec.tab('text');
       $('#directText').value='';
     }
-    if(blob&&Data.settings.whisperProxy)this.whisper(blob);
+    if(blob&&(Data.settings.asrMode!=='builtin'))this.whisper(blob);
   },
   whisper:function(blob){
     var self=this;
-    var proxy=Data.settings.whisperProxy, model=Data.settings.whisperModel||'whisper-1';
-    $('#recHint').textContent='正在用 Whisper 精修转写…';
+    var mode=Data.settings.asrMode||'builtin';
+    if(mode==='builtin'){return;} // 内置模式不调用云端
+    $('#recHint').textContent='正在用云端 ASR 精修转写…';
     var fd=new FormData();
     fd.append('file',blob,'rec.webm');
-    fd.append('model',model);
+    fd.append('engine','whisper');
     fd.append('language','zh');
-    fetch(proxy,{method:'POST',body:fd}).then(function(r){
+
+    var url, extraFields;
+    if(mode==='cloud'){
+      // 免费公共 ASR：NoteTakers（无需 API Key，支持 CORS）
+      url='https://notetakers.vipresearch.ca/stt/v1/transcribe';
+      extraFields='';
+    }else{
+      // 自定义代理
+      url=Data.settings.whisperProxy;
+      if(!url){$('#recHint').textContent='未配置代理地址，已保留原识别';return;}
+      fd.append('model',Data.settings.whisperModel||'whisper-1');
+      extraFields='';
+    }
+
+    fetch(url,{method:'POST',body:fd}).then(function(r){
       if(!r.ok)throw new Error('HTTP '+r.status);
       return r.json().catch(function(){return r.text().then(function(t){return {text:t};});});
     }).then(function(j){
       var t=((j&&j.text)||'').trim();
-      if(t){self.draft.text=t;self.showDraft();self.autoGen();toast('Whisper 转写完成');}
-      else{$('#recHint').textContent='Whisper 未返回文字，已保留原识别';}
+      if(t){self.draft.text=t;self.showDraft();self.autoGen();toast('云端转写完成');}
+      else{$('#recHint').textContent='云端未返回文字，已保留原识别';}
     }).catch(function(e){
-      $('#recHint').textContent='Whisper 转写失败（'+(e&&e.message||e)+'），已保留原识别';
+      $('#recHint').textContent='云端转写失败（'+(e&&e.message||e)+'），已保留原识别';
     });
   },
   fromDirect:function(){
@@ -1443,7 +1668,7 @@ var Rec={
     this.showDraft();
     $('#recHint').textContent='已导入音频，请补充文字稿';
     inp.value='';
-    if(Data.settings.whisperProxy)this.whisper(f);
+    if(Data.settings.asrMode!=='builtin')this.whisper(f);
   },
   autoGen:function(){
     var d=this.draft;if(!d)return;
@@ -1575,6 +1800,7 @@ var Render={
       '<div class="dot"></div><div class="nb">'+
       '<h3>'+esc(n.title)+'</h3>'+
       '<div class="pv">'+desc+'</div>'+
+      (n.imgCount>0?'<div class="card-imgs" data-cid="'+n.id+'"></div>':'')+
       '<div class="mt">'+
         '<span class="badge'+(n.status==='已发布'?' g':n.status==='写作中'?' b':'')+'">'+esc(n.status)+'</span>'+
         '<span>'+when+'</span>'+
@@ -1593,6 +1819,7 @@ var Render={
     var h='';
     list.slice(0,limit||list.length).forEach(function(n){h+=Render.noteCardHTML(n, !!limit);});
     box.innerHTML=h;
+    this.loadCardImgs();
   },
   memoFull:function(f){
     if(f)this._mf=f;
@@ -1618,6 +1845,23 @@ var Render={
     list.forEach(function(n){h+=Render.fullCardHTML(n);});
     box.innerHTML=h;
     $$('#memoListFull .swipe').forEach(function(w){makeSwipe(w);});
+    this.loadCardImgs();
+  },
+  loadCardImgs:function(){
+    var self=this;
+    $$('.card-imgs').forEach(function(el){
+      var cid=el.dataset.cid;if(!cid)return;
+      if(el._loaded)return;el._loaded=true;
+      IDB.get('images',cid).then(function(arr){
+        arr=arr||[];
+        if(!arr.length)return;
+        var h='';
+        var show=arr.slice(0,3);
+        show.forEach(function(src){h+='<div class="ci-thumb"><img src="'+src+'" onerror="this.parentElement.style.display=\'none\'" loading="lazy"></div>';});
+        if(arr.length>3)h+='<div class="ci-more">+'+(arr.length-3)+'</div>';
+        el.innerHTML=h;
+      });
+    });
   },
   fullCardHTML:function(n){
     return '<div class="swipe" data-nid="'+n.id+'">'+
@@ -1628,6 +1872,7 @@ var Render={
       '</div>'+
       '<div class="sw-del right" onclick="Render.delMemo(\''+n.id+'\')">删除</div>'+
       Render.noteCardHTML(n,false)+
+      (n.imgCount>0?'<div class="card-imgs" data-cid="'+n.id+'"></div>':'')+
     '</div>';
   },
   setStatus:function(id,s){
@@ -1856,9 +2101,10 @@ var Leaf={
   }
 };
 
-/* ================= 枝条图谱 ================= */
+/* ================= 枝条图谱（放射状思维导图） ================= */
 var Graph={
-  freq:{}, co:{}, sel:null,
+  freq:{}, co:{}, sel:null, zoom:1, nodes:[], edgeList:[],
+  /* 计算词频和共现 */
   build:function(){
     this.freq={}; this.co={};
     Data.notes.forEach(function(n){
@@ -1879,29 +2125,152 @@ var Graph={
     });
     return out;
   },
+  /* 核心布局：放射状思维导图 */
+  layout:function(){
+    this.nodes=[]; this.edgeList=[];
+    var ks=Object.keys(this.freq);
+    if(!ks.length)return;
+    // 按频次排序
+    ks.sort(function(a,b){return Graph.freq[b]-Graph.freq[a];});
+    var cx=170, cy=190, W=340, H=380;
+    // 中心节点：频次最高的词（或选中的词）
+    var centerKw=this.sel||ks[0];
+    // 一级节点：与中心节点有共现的词，按共现强度排序
+    var rel=this.related(centerKw);
+    var primaries=Object.keys(rel).sort(function(a,b){return rel[b]-rel[a];});
+    // 如果一级节点太少，补充高频词
+    if(primaries.length<3){
+      var used={};used[centerKw]=1;primaries.forEach(function(k){used[k]=1;});
+      ks.forEach(function(k){if(!used[k]&&primaries.length<6)primaries.push(k);});
+    }
+    primaries=primaries.slice(0,6); // 最多6个一级节点
+    // 二级节点：与一级节点有关联的其他词
+    var secondaries=[];
+    var pSet={};pSet[centerKw]=1;primaries.forEach(function(k){pSet[k]=1;});
+    ks.forEach(function(k){
+      if(!pSet[k]&&Graph.freq[k]>=2)secondaries.push(k);
+    });
+    secondaries=secondaries.slice(0,12);
+    // 构建节点数据
+    var self=this;
+    // 中心
+    this.nodes.push({id:centerKw, label:centerKw, type:'center', x:cx, y:cy, r:28, count:this.freq[centerKw]||0});
+    // 一级节点：均匀分布在中心周围
+    var pR=95, pAngle=Math.PI*2/primaries.length, pStart=-Math.PI/2;
+    primaries.forEach(function(k,i){
+      var a=pStart+pAngle*i;
+      var x=cx+Math.cos(a)*pR, y=cy+Math.sin(a)*pR;
+      self.nodes.push({id:k,label:k,type:'primary',x:x,y:y,r:22,count:self.freq[k]||0,coCount:rel[k]||0});
+      // 边：中心→一级
+      var str=(rel[k]||0)>=3?'strong':(rel[k]||0)>=2?'medium':'weak';
+      self.addEdge({from:centerKw,to:k,type:str});
+    });
+    // 二级节点：分布在对应一级节点外围
+    var sR=55, usedS={};
+    secondaries.forEach(function(k,i){
+      // 找到与该二级节点关联最强的一级节点作为父节点
+      var bestP=null,bestV=0;
+      primaries.forEach(function(p){
+        var ck=p<k?p+'|'+k:k+'|'+p;
+        var v=self.co[ck]||0;
+        if(v>bestV){bestV=v;bestP=p;}
+      });
+      if(!bestP)bestP=primaries[i%primaries.length];
+      var pNode=self.findNode(bestP);
+      if(!pNode)return;
+      // 在父节点周围找空位
+      var sAngle=Math.PI*2/4; // 每个一级节点最多4个二级
+      var baseA=Math.atan2(pNode.y-cy,pNode.x-cx);
+      var si=(usedS[bestP]||0);
+      var a=baseA+sAngle*(si-1.5);
+      var x=pNode.x+Math.cos(a)*sR, y=pNode.y+Math.sin(a)*sR;
+      // 边界约束
+      x=Math.max(30,Math.min(x,W-30));y=Math.max(30,Math.min(y,H-30));
+      self.nodes.push({id:k,label:k,type:'secondary',x:x,y:y,r:16,count:self.freq[k]||0,parent:bestP});
+      usedS[bestP]=(usedS[bestP]||0)+1;
+      // 边：一级→二级
+      var str=bestV>=3?'strong':bestV>=2?'medium':'weak';
+      self.addEdge({from:bestP,to:k,type:str});
+    });
+  },
+  findNode:function(id){
+    for(var i=0;i<this.nodes.length;i++){if(this.nodes[i].id===id)return this.nodes[i];}
+    return null;
+  },
+  addEdge:function(e){
+    // 存储为双向边（避免重复渲染）
+    var key=e.from<e.to?e.from+'→'+e.to:e.to+'→'+e.from;
+    for(var i=0;i<this.edgeList.length;i++){
+      var k=this.edgeList[i].from<this.edgeList[i].to?this.edgeList[i].from+'→'+this.edgeList[i].to:this.edgeList[i].to+'→'+this.edgeList[i].from;
+      if(k===key)return;
+    }
+    this.edgeList.push(e);
+  },
   draw:function(){
     this.build();
     var ks=Object.keys(this.freq);
     $('#graphInfo').textContent=ks.length+' 个关键词';
-    var box=$('#graph');
-    if(!box)return;
+    var svg=$('#graph');
+    if(!svg)return;
     if(!ks.length){
-      box.innerHTML='<div class="cloud-empty">还没有关键词<br>去树干录一条，标签会自动长成词云</div>';
-      $('#graphDetail').innerHTML='';$('#graphLegend').innerHTML='';return;
+      svg.innerHTML='<text x="170" y="190" text-anchor="middle" fill="var(--text3)" font-size="13">还没有关键词<br/>去树干录一条，标签会自动生成图谱</text>';
+      $('#graphDetail').innerHTML='';$('#graphLegend').innerHTML='';$('#graphPreview').innerHTML='';
+      return;
     }
-    var maxN=1;ks.forEach(function(k){if(Graph.freq[k]>maxN)maxN=Graph.freq[k];});
-    var html=ks.slice().sort(function(a,b){return Graph.freq[b]-Graph.freq[a];}).map(function(k){
-      var n=Graph.freq[k];
-      var sz=13+Math.sqrt(n/maxN)*15;
-      var hot=n>=3, on=Graph.sel===k;
-      return '<button class="kw-chip'+(hot?' hot':'')+(on?' on':'')+'" data-kw="'+esc(k)+'" onclick="Graph.selectKw(this)" style="font-size:'+sz.toFixed(1)+'px">'+esc(k)+'<i>'+n+'</i></button>';
-    }).join('');
-    box.innerHTML=html;
-    var top=ks.slice().sort(function(a,b){return Graph.freq[b]-Graph.freq[a];}).slice(0,5);
-    $('#graphLegend').innerHTML=top.map(function(k){
-      return '<span><i style="background:'+(Graph.freq[k]>=3?'var(--brown)':'var(--green)')+'"></i>'+esc(k)+' ×'+Graph.freq[k]+'</span>';
-    }).join('');
+    this.layout();
+    this.renderSVG(svg);
+    this.renderLegend();
+    this.renderPreview();
     if(this.sel)this.detail(this.sel);else $('#graphDetail').innerHTML='';
+  },
+  renderSVG:function(svg){
+    var ns='http://www.w3.org/2000/svg';
+    var h='';
+    // 绘制连线（在节点下层）
+    h+='<g class="gedges">';
+    for(var i=0;i<this.edgeList.length;i++){
+      var e=this.edgeList[i];
+      var n1=this.findNode(e.from),n2=this.findNode(e.to);
+      if(!n1||!n2)continue;
+      var cls=e.type==='strong'?'gedge-strong':e.type==='medium'?'gedge-medium':'gedge-weak';
+      h+='<line class="'+cls+'" x1="'+n1.x+'" y1="'+n1.y+'" x2="'+n2.x+'" y2="'+n2.y+'"/>';
+    }
+    h+='</g>';
+    // 绘制节点
+    h+='<g class="gnodes">';
+    for(var i=0;i<this.nodes.length;i++){
+      var nd=this.nodes[i];
+      var selCls=(this.sel===nd.id)?' sel':'';
+      if(nd.type==='center'){
+        h+='<g class="gnode-center'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
+          '<circle cx="'+nd.x+'" cy="'+nd.y+'" r="'+nd.r+'"/>'+
+          '<text x="'+nd.x+'" y="'+nd.y+'">'+esc(nd.label)+'</text></g>';
+      }else if(nd.type==='primary'){
+        var rw=nd.r*2+20,rh=nd.r+10,rx=nd.x-rw/2,ry=nd.y-rh/2;
+        h+='<g class="gnode-primary'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
+          '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="12"/>'+
+          '<text x="'+nd.x+'" y="'+nd.y+'">'+esc(nd.label)+'</text></g>';
+      }else{
+        var rw=nd.label.length*11+16,rh=24,rx=nd.x-rw/2,ry=nd.y-rh/2;
+        h+='<g class="gnode-secondary'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
+          '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="12"/>'+
+          '<text x="'+nd.x+'" y="'+nd.y+'">'+esc(nd.label)+'</text></g>';
+      }
+    }
+    h+='</g>';
+    svg.innerHTML=h;
+  },
+  renderLegend:function(){
+    $('#graphLegend').innerHTML=
+      '<span class="gl-item"><span class="gl-line"></span>强关联</span>'+
+      '<span class="gl-item"><span class="gl-line dash"></span>中关联</span>'+
+      '<span class="gl-item"><span class="gl-line dot"></span>弱关联</span>';
+  },
+  renderPreview:function(){
+    // 复制当前 SVG 的缩小版作为预览
+    var src=$('#graph');
+    if(!src||!src.innerHTML){$('#graphPreview').innerHTML='';return;}
+    $('#graphPreview').innerHTML='<svg viewBox="0 0 340 380">'+src.innerHTML+'</svg>';
   },
   selectKw:function(el){
     var k=el?el.dataset.kw:null;
@@ -1909,6 +2278,12 @@ var Graph={
     this.draw();
   },
   select:function(k){this.sel=(this.sel===k)?null:k;this.draw();},
+  zoomIn:function(){this.zoom=Math.min(2,this.zoom*1.3);$('#graph').style.transform='scale('+this.zoom+')';},
+  toggleFilter:function(){toast('筛选功能：点击任意关键词即可筛选相关备忘录');},
+  relayout:function(){this.draw();toast('已重新布局');},
+  toggleLegend:function(){
+    var leg=$('.graph-bottom');if(leg)leg.style.display=leg.style.display==='none'?'flex':'none';
+  },
   detail:function(kw){
     var rel=this.related(kw);
     var relKs=Object.keys(rel).sort(function(a,b){return rel[b]-rel[a];}).slice(0,10);
@@ -2056,11 +2431,20 @@ var Detail={
     IDB.get('images',n.id).then(function(arr){
       arr=arr||[];
       if(self.cur!==n)return;
+      // 过滤掉空字符串和无效数据
+      var valid=arr.filter(function(s){return s&&s.length>20;});
+      if(valid.length!==arr.length&&valid.length){
+        // 修复：IDB中有脏数据，回写清理后的数组
+        arr=valid;IDB.put('images',n.id,arr);n.imgCount=arr.length;Data.saveNotes();
+      }
       n.imgCount=arr.length;
+      $('#dtImgCount').textContent=(n.imgCount?n.imgCount+'/9':'');
+      if(!arr.length){$('#dtImgs').innerHTML='';return;}
       var h=arr.map(function(src,i){
-        return '<div class="it"><img src="'+src+'" alt="" onclick="Detail.preview(\''+i+'\')">'+
+        return '<div class="it"><img src="'+src+'" alt="" onerror="this.parentElement.style.display=\'none\'" onclick="Detail.preview(\''+i+'\')">'+
           '<button class="rm" onclick="Detail.rmImg('+i+')"><svg><use href="#i-x"/></svg></button></div>';
       }).join('');
+      h+='<button class="btn btn-s btn-o" style="grid-column:1/-1" onclick="document.getElementById(\'dtImgFile\').click()"><svg><use href="#i-plus"/></svg>添加图片</button>';
       $('#dtImgs').innerHTML=h;
     });
   },
@@ -2081,14 +2465,17 @@ var Detail={
       arr=arr||[];
       var room=9-arr.length;
       if(room<=0){toast('最多 9 张');inp.value='';return;}
-      var todo=files.slice(0,room),done=0;
+      var todo=files.slice(0,room),done=0,fail=0;
       todo.forEach(function(f){
         compressImg(f,900,function(b64){
-          arr.push(b64);done++;
+          if(!b64){fail++;console.warn('图片压缩失败:',f.name);}
+          else{arr.push(b64);}
+          done++;
           if(done===todo.length){
             IDB.put('images',n.id,arr).then(function(){
               n.imgCount=arr.length;Data.saveNotes();
-              self.paintImgs();Render.notes();inp.value='';toast('已添加 '+todo.length+' 张图');
+              self.paintImgs();Render.notes();Render.memoFull();inp.value='';
+              toast(fail?('已添加 '+done+' 张图（'+fail+'张失败）'):('已添加 '+done+' 张图'));
             });
           }
         });
@@ -2181,6 +2568,17 @@ var Me={
     var wp=Data.settings.whisperProxy||'';
     if($('#whisperProxy'))$('#whisperProxy').value=wp;
     if($('#whisperModel'))$('#whisperModel').value=Data.settings.whisperModel||'whisper-1';
+    // ASR 模式
+    var am=Data.settings.asrMode||'builtin';
+    $$('#asrSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===am);});
+    $('#asrCustomOpts').style.display=(am==='custom')?'block':'none';
+  },
+  saveASR:function(mode){
+    Data.settings.asrMode=mode;Data.saveSettings();
+    $$('#asrSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===mode);});
+    $('#asrCustomOpts').style.display=(mode==='custom')?'block':'none';
+    var labels={builtin:'浏览器内置（零配置）',cloud:'云端增强（免费ASR）',custom:'自定义代理'};
+    toast('已切换为：'+labels[mode]);
   },
   saveWhisper:function(){
     Data.settings.whisperProxy=($('#whisperProxy').value||'').trim();
