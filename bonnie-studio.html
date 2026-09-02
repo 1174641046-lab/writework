@@ -178,6 +178,10 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .qc-title{font-size:22px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:6px}
 .qc-sub{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:20px;padding:0 4px}
 .qc-actions{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.rec-hold{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:16px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;color:#fff;background:var(--green);margin-bottom:12px;user-select:none;-webkit-user-select:none;touch-action:none;transition:transform .08s,background .15s;box-shadow:0 6px 18px rgba(46,125,50,.25)}
+.rec-hold svg{width:21px;height:21px}
+.rec-hold.on{background:#1B5E20;transform:scale(.985)}
+.rec-hold.cancel{background:var(--danger)}
 .qc-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
 .qc-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
 .qc-btn:first-child{background:var(--green);color:#fff;box-shadow:0 4px 16px rgba(46,125,50,.28)}
@@ -568,10 +572,12 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <div class="qc-head">QUICK CAPTURE · 灵感入口</div>
       <div class="qc-title">想到什么，先说下来。</div>
       <div class="qc-sub">不用打字，不用整理，先把灵感留下。<br>灵感集帮你把它变成知识。</div>
+      <button class="qc-btn rec-hold" id="recHoldBtn" onpointerdown="Rec.holdDown(event)" onpointermove="Rec.holdMove(event)" onpointerup="Rec.holdUp(event)" onpointercancel="Rec.holdCancelEv(event)"><svg><use href="#i-mic"/></svg><span id="recHoldLbl">按住 说话</span></button>
       <div class="qc-actions">
         <button class="qc-btn" id="recBtn" onclick="Rec.start()"><svg><use href="#i-mic"/></svg>开始录音识别</button>
         <button class="qc-btn qc-btn-ghost" onclick="Rec.tab('text');$('#pane-text').classList.remove('hidden');$('#pane-voice').classList.add('hidden');document.getElementById('directText').focus()"><svg><use href="#i-plus"/></svg>输入灵感</button>
       </div>
+      <div class="qc-tip">微信式：按住录音，松手结束，上滑取消</div>
       <div class="qc-tip">进入灵想集的第一件事，就是留下此刻的灵感</div>
       <!-- 隐藏的原有面板（录音中/结果） -->
       <div id="pane-voice" class="hidden">
@@ -853,7 +859,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.6</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.7</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1532,7 +1538,7 @@ var Forest={
 
 /* ================= 录音识别 ================= */
 var Rec={
-  mr:null,stream:null,chunks:[],timer:null,segTimer:null,sec:0,recording:false,paused:false,mode:'builtin',fullChunks:[],_flush:false,_stopReason:'',_finalAccum:'',_srFinal:'',
+  mr:null,stream:null,chunks:[],timer:null,segTimer:null,sec:0,recording:false,paused:false,mode:'builtin',fullChunks:[],_flush:false,_stopReason:'',_finalAccum:'',_srFinal:'',holdMode:false,_holdRelease:false,_holdCancel:false,
   sr:null,srOn:false,finalText:'',interim:'',
   draft:null, /* {text,audio:Blob|null,audioUrl,title,tags} */
   tab:function(t){
@@ -1560,6 +1566,12 @@ var Rec={
       if(self.mode==='builtin')self.startSR();
       else self.segTimer=setInterval(function(){self.flushSeg();},4000);
       self.openModal();
+      if(self.holdMode){var pb=document.getElementById('recPauseBtn');if(pb)pb.style.display='none';}
+      else{var pb2=document.getElementById('recPauseBtn');if(pb2)pb2.style.display='';}
+      if(self.holdMode&&self._holdRelease){ // 松手早于麦克风授权完成
+        if(self._holdCancel)self.cancelRec(); else self.done();
+        return;
+      }
       self.timer=setInterval(function(){
         self.sec++;self.renderLive();
         var ws=self.popWave();if(ws)ws.forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});
@@ -1625,6 +1637,38 @@ var Rec={
     this.timer=setInterval(function(){this.sec++;this.renderLive();var ws=this.popWave();if(ws)ws.forEach(function(b){b.style.height=(6+Math.random()*18)+'px';});}.bind(this),1000);
   },
   togglePause:function(){ if(this.paused)this.resume(); else this.pause(); },
+  // 微信式「按住说话」：按住录音，松手结束，上滑取消（与原有的点按流程并存）
+  holdDown:function(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(this.recording)return; // 已在录音（点按模式）时不抢占
+    this.holdMode=true;this._holdRelease=false;this._holdCancel=false;
+    var btn=document.getElementById('recHoldBtn');
+    if(btn){btn.classList.add('on');try{if(e&&e.pointerId!=null)e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}}
+    this.start();
+  },
+  holdMove:function(e){
+    if(!this.holdMode||!this.recording)return;
+    var btn=document.getElementById('recHoldBtn');if(!btn)return;
+    var r=btn.getBoundingClientRect();
+    var cancel=(e.clientY < r.top - 28); // 上滑超过阈值 = 取消
+    this._holdCancel=cancel;
+    btn.classList.toggle('cancel',cancel);
+    var lbl=document.getElementById('recHoldLbl');if(lbl)lbl.textContent=cancel?'松开 取消':'按住 说话';
+  },
+  holdUp:function(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var btn=document.getElementById('recHoldBtn');
+    if(btn){btn.classList.remove('on');btn.classList.remove('cancel');}
+    this._holdRelease=true;
+    if(!this.recording)return; // 麦克风授权还没完成，等 start 回调里处理
+    if(this._holdCancel)this.cancelRec(); else this.done();
+  },
+  holdCancelEv:function(e){
+    var btn=document.getElementById('recHoldBtn');
+    if(btn){btn.classList.remove('on');btn.classList.remove('cancel');}
+    this._holdRelease=true;this._holdCancel=true;
+    if(this.recording)this.cancelRec();
+  },
   done:function(){
     if(!this.recording)return;
     this._stopReason='done';
@@ -1642,7 +1686,8 @@ var Rec={
     else this.afterCancel();
   },
   afterCancel:function(){
-    this.recording=false;this.paused=false;
+    this.recording=false;this.paused=false;this.holdMode=false;
+    var l=document.getElementById('recHoldLbl');if(l)l.textContent='按住 说话';
     if(this.timer){clearInterval(this.timer);this.timer=null;}
     if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
     if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
@@ -1653,7 +1698,7 @@ var Rec={
     var m=document.getElementById('recModal');if(m)m.classList.remove('hidden');
     var w=document.getElementById('recPopWave');if(w){var h='';for(var i=0;i<22;i++)h+='<i></i>';w.innerHTML=h;}
     this.setPopState('录音中…');
-    var pb=document.getElementById('recPauseBtn');if(pb)pb.textContent='暂停';
+    var pb=document.getElementById('recPauseBtn');if(pb){pb.textContent='暂停';pb.style.display='';}
   },
   closeModal:function(){var m=document.getElementById('recModal');if(m)m.classList.add('hidden');},
   setPopState:function(s){var e=document.getElementById('recPopState');if(e)e.textContent=s;},
@@ -1720,7 +1765,8 @@ var Rec={
     var url=blob?URL.createObjectURL(blob):'';
     if(!text&&!blob){this.closeModal();this.setHint('没有录到内容');return;}
     this.closeModal();
-    this.recording=false;this.paused=false;
+    this.recording=false;this.paused=false;this.holdMode=false;
+    var l=document.getElementById('recHoldLbl');if(l)l.textContent='按住 说话';
     if(this.timer){clearInterval(this.timer);this.timer=null;}
     if(this.segTimer){clearInterval(this.segTimer);this.segTimer=null;}
     if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}
