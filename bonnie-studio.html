@@ -320,6 +320,8 @@ html[data-theme="dark"] .hcell.l4{background:var(--green);color:#12200F}
 .gedge-strong{stroke:var(--green);stroke-width:1.6;fill:none;opacity:.7}
 .gedge-medium{stroke:var(--green);stroke-width:1.1;fill:none;stroke-dasharray:5,4;opacity:.45}
 .gedge-weak{stroke:var(--text3);stroke-width:.8;fill:none;stroke-dasharray:3,4;opacity:.35}
+.gedge-cross{stroke:var(--green);stroke-width:.8;fill:none;stroke-dasharray:4,5;opacity:.25}
+.gcount{fill:var(--green);font-size:9px;font-weight:500}
 
 /* ---------- 设置 ---------- */
 .me-hd{display:flex;align-items:center;gap:14px;padding:18px 16px}
@@ -866,7 +868,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.22</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.23</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -2547,6 +2549,14 @@ var Graph={
       var str=bestV>=3?'strong':bestV>=2?'medium':'weak';
       self.addEdge({from:bestP,to:k,type:str});
     });
+    // 跨节点虚线关联（形成"网状"）：一级节点之间共现≥2 的加虚线
+    for(var pi=0;pi<primaries.length;pi++){
+      for(var pj=pi+1;pj<primaries.length;pj++){
+        var ck=primaries[pi]<primaries[pj]?primaries[pi]+'|'+primaries[pj]:primaries[pj]+'|'+primaries[pi];
+        var cv=self.co[ck]||0;
+        if(cv>=2) self.addEdge({from:primaries[pi],to:primaries[pj],type:'cross'});
+      }
+    }
   },
   findNode:function(id){
     for(var i=0;i<this.nodes.length;i++){if(this.nodes[i].id===id)return this.nodes[i];}
@@ -2586,11 +2596,11 @@ var Graph={
       var e=this.edgeList[i];
       var n1=this.findNode(e.from),n2=this.findNode(e.to);
       if(!n1||!n2)continue;
-      var cls=e.type==='strong'?'gedge-strong':e.type==='medium'?'gedge-medium':'gedge-weak';
+      var cls=e.type==='strong'?'gedge-strong':e.type==='medium'?'gedge-medium':e.type==='cross'?'gedge-cross':'gedge-weak';
       h+='<line class="'+cls+'" x1="'+n1.x+'" y1="'+n1.y+'" x2="'+n2.x+'" y2="'+n2.y+'"/>';
     }
     h+='</g>';
-    // 绘制节点（使用动态 fill/tColor）
+    // 绘制节点（使用动态 fill/tColor + 频次角标）
     h+='<g class="gnodes">';
     for(var i=0;i<this.nodes.length;i++){
       var nd=this.nodes[i];
@@ -2600,16 +2610,19 @@ var Graph={
       if(nd.type==='center'){
         h+='<g class="gnode-center'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
           '<circle cx="'+nd.x+'" cy="'+nd.y+'" r="'+nd.r+'" fill="'+fill+'"/>'+
-          '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text></g>';
+          '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text>'+
+          (nd.count>1?'<text class="gcount" x="'+(nd.x+nd.r*.55)+'" y="'+(nd.y-nd.r*.35)+'">'+nd.count+'</text>':'')+
+          '</g>';
       }else{
-        // primary 和 secondary 都用圆角矩形（pill 形状，对齐参考图）
         var rw=nd.label.length*11+18, rh=nd.r*1.1+8;
         rw=Math.max(rw, nd.r*1.6);
         var rx=nd.x-rw/2, ry=nd.y-rh/2;
         var clsName=nd.type==='primary'?'gnode-primary':'gnode-secondary';
         h+='<g class="'+clsName+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
           '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="'+(rh/2)+'" fill="'+fill+'" stroke="var(--green)" stroke-width="'+(nd.type==='primary'?1:.7)+'"/>'+
-          '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text></g>';
+          '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text>'+
+          (nd.type==='primary'&&nd.count>1?'<text class="gcount" x="'+(nd.x+rw/2-4)+'" y="'+(ry+rh-5)+'">'+nd.count+'</text>':'')+
+          '</g>';
       }
     }
     h+='</g>';
@@ -2619,7 +2632,8 @@ var Graph={
     $('#graphLegend').innerHTML=
       '<span class="gl-item"><span class="gl-line"></span>强关联</span>'+
       '<span class="gl-item"><span class="gl-line dash"></span>中关联</span>'+
-      '<span class="gl-item"><span class="gl-line dot"></span>弱关联</span>';
+      '<span class="gl-item"><span class="gl-line dot"></span>弱关联</span>'+
+      '<span class="gl-item"><span class="gl-line" style="border-top-style:dashed;opacity:.25"></span>跨关联</span>';
   },
   renderPreview:function(){
     // 复制当前 SVG 的缩小版作为预览
