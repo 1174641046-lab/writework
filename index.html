@@ -698,7 +698,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <button class="gtb-btn" onclick="Graph.relayout()" title="布局"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-branch"/></svg>布局</button>
         <button class="gtb-btn" onclick="Graph.toggleLegend()" title="图例"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-note"/></svg>图例</button>
       </div>
-      <div class="graph-svg-wrap" id="graphWrap">
+      <div class="graph-svg-wrap" id="graphWrap" onclick="Graph.clearSel()">
         <svg id="graph" viewBox="0 0 400 420" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
       <div class="graph-bottom">
@@ -870,7 +870,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.25</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.26</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -2074,7 +2074,7 @@ var Rec={
 /* ================= 渲染 ================= */
 var Render={
   _tc:true,
-  all:function(){this.overview();this.today();this.notes(2);this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();},
+  all:function(){this.overview();this.today();this.notes(2);this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();Graph.draw();},
   header:function(){
     var p=Data.profile;
     var av=p.avatar?'<img class="avatar-sm" src="'+p.avatar+'" alt="">':'<svg style="width:36px;height:36px;vertical-align:middle"><use href="#i-logo"/></svg>';
@@ -2630,7 +2630,7 @@ var Graph={
       var fill=nd.fill||'var(--green)';
       var tClr=nd.tColor||'#fff';
       if(nd.type==='center'){
-        h+='<g class="gnode-center'+selCls+dimCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
+        h+='<g class="gnode-center'+selCls+dimCls+'" onclick="event.stopPropagation();Graph.select(\''+nd.id+'\')">'+
           '<circle cx="'+nd.x+'" cy="'+nd.y+'" r="'+nd.r+'" fill="'+fill+'"/>'+
           '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text>'+
           (nd.count>1?'<text class="gcount" x="'+(nd.x+nd.r*.55)+'" y="'+(nd.y-nd.r*.35)+'">'+nd.count+'</text>':'')+
@@ -2640,7 +2640,7 @@ var Graph={
         rw=Math.max(rw, nd.r*1.6);
         var rx=nd.x-rw/2, ry=nd.y-rh/2;
         var clsName=nd.type==='primary'?'gnode-primary':'gnode-secondary';
-        h+='<g class="'+clsName+selCls+dimCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
+        h+='<g class="'+clsName+selCls+dimCls+'" onclick="event.stopPropagation();Graph.select(\''+nd.id+'\')">'+
           '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="'+(rh/2)+'" fill="'+fill+'" stroke="var(--green)" stroke-width="'+(nd.type==='primary'?1:.7)+'"/>'+
           '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text>'+
           (nd.type==='primary'&&nd.count>1?'<text class="gcount" x="'+(nd.x+rw/2-4)+'" y="'+(ry+rh-5)+'">'+nd.count+'</text>':'')+
@@ -2669,6 +2669,7 @@ var Graph={
     this.draw();
   },
   select:function(k){this.sel=(this.sel===k)?null:k;this.draw();},
+  clearSel:function(){if(this.sel){this.sel=null;this.draw();}},
   zoomIn:function(){this.zoom=Math.min(2,this.zoom*1.3);$('#graph').style.transform='scale('+this.zoom+')';},
   toggleFilter:function(){toast('筛选功能：点击任意关键词即可筛选相关备忘录');},
   relayout:function(){this.draw();toast('已重新布局');},
