@@ -295,7 +295,7 @@ html[data-theme="dark"] .hcell.l4{background:var(--green);color:#12200F}
 .gtb-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text2);font-size:11.5px;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
 .gtb-btn:active{transform:scale(.96)}
 .gtb-btn svg{flex:none}
-.graph-svg-wrap{width:100%;min-height:300px;background:var(--card2);border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative}
+.graph-svg-wrap{width:100%;min-height:340px;background:var(--card2);border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative}
 .graph-svg-wrap svg{width:100%;height:auto;display:block;min-height:300px}
 .graph-bottom{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;gap:12px}
 .graph-legend{display:flex;gap:14px;flex:1;flex-wrap:wrap;font-size:11px;color:var(--text2);align-items:center}
@@ -306,19 +306,20 @@ html[data-theme="dark"] .hcell.l4{background:var(--green);color:#12200F}
 .graph-preview{width:70px;height:50px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card2);flex:none}
 .graph-preview svg{width:100%;height:100%}
 /* 图谱节点样式（SVG内） */
-.gnode-center{fill:var(--green);cursor:pointer}
-.gnode-center text{fill:#fff;font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
-.gnode-primary{fill:var(--green-l);stroke:var(--green);stroke-width:1.5;cursor:pointer}
-.gnode-primary text{fill:var(--text);font-size:11px;font-weight:600;text-anchor:middle;dominant-baseline:central;pointer-events:none}
-.gnode-primary.sel{fill:var(--green);stroke:var(--green)}
-.gnode-primary.sel text{fill:#fff}
-.gnode-secondary{fill:var(--card);stroke:var(--line);stroke-width:1;cursor:pointer}
-.gnode-secondary text{fill:var(--text2);font-size:10px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
-.gnode-secondary.sel{fill:var(--green-l);stroke:var(--green)}
-.gnode-secondary.sel text{fill:var(--green);font-weight:600}
-.gedge-strong{stroke:var(--green);stroke-width:1.8;fill:none}
-.gedge-medium{stroke:var(--green);stroke-width:1.2;fill:none;stroke-dasharray:5,3}
-.gedge-weak{stroke:var(--text3);stroke-width:1;fill:none;stroke-dasharray:2,3}
+.gnode-center{fill:var(--green);cursor:pointer;transition:filter .2s}
+.gnode-center:hover{filter:brightness(1.1)}
+.gnode-center text{fill:#fff;font-size:13px;font-weight:500;text-anchor:middle;dominant-baseline:central;pointer-events:none;letter-spacing:.5px}
+.gnode-primary{cursor:pointer;transition:all .2s}
+.gnode-primary:hover{filter:brightness(.95)}
+.gnode-primary text{font-size:11px;font-weight:400;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.gnode-primary.sel text{fill:#fff;font-weight:500}
+.gnode-secondary{cursor:pointer;transition:all .2s}
+.gnode-secondary:hover{filter:brightness(.95)}
+.gnode-secondary text{font-size:10px;font-weight:400;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.gnode-secondary.sel text{fill:var(--green);font-weight:500}
+.gedge-strong{stroke:var(--green);stroke-width:1.6;fill:none;opacity:.7}
+.gedge-medium{stroke:var(--green);stroke-width:1.1;fill:none;stroke-dasharray:5,4;opacity:.45}
+.gedge-weak{stroke:var(--text3);stroke-width:.8;fill:none;stroke-dasharray:3,4;opacity:.35}
 
 /* ---------- 设置 ---------- */
 .me-hd{display:flex;align-items:center;gap:14px;padding:18px 16px}
@@ -694,7 +695,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <button class="gtb-btn" onclick="Graph.toggleLegend()" title="图例"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-note"/></svg>图例</button>
       </div>
       <div class="graph-svg-wrap" id="graphWrap">
-        <svg id="graph" viewBox="0 0 340 380" preserveAspectRatio="xMidYMid meet"></svg>
+        <svg id="graph" viewBox="0 0 400 420" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
       <div class="graph-bottom">
         <div class="graph-legend" id="graphLegend"></div>
@@ -865,7 +866,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.21</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.22</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1677,6 +1678,7 @@ var Rec={
     this._askDiscard=false;
     if(this._discardTimer){clearTimeout(this._discardTimer);this._discardTimer=null;}
     var db=document.getElementById('recDiscardBtn');if(db){db.textContent='放弃';db.classList.remove('danger');}
+    this.setUndo(false);
     var w=document.getElementById('recPopWave');if(w){var h='';for(var i=0;i<22;i++)h+='<i></i>';w.innerHTML=h;}
     this.setPopState('录音中…');
     var pb=document.getElementById('recPauseBtn');if(pb){pb.textContent='暂停';pb.style.display='';}
@@ -1879,8 +1881,25 @@ var Rec={
     var self=this;
     var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标点';}};
     this._punctRequest(txt,function(t){
-      self.draft.text=t;$('#draftText').value=t;self.cacheDraft();self.onDraftText();toast('已优化标点');restore();
+      self._prePunct=txt;
+      self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
+      self.refreshTagSugs();self.refreshTitleOpts();self.setUndo(true);
+      toast('已优化标点，可撤销');restore();
     },function(){toast('AI 标点失败，保持原文');restore();});
+  },
+  undoPunct:function(){
+    if(!this._prePunct)return;
+    var ab=document.getElementById('aiPunctBtn');
+    if(ab&&ab.disabled)return;
+    var t=this._prePunct;this._prePunct=null;
+    this.draft.text=t;$('#draftText').value=t;this.cacheDraft();
+    this.refreshTagSugs();this.refreshTitleOpts();this.setUndo(false);
+    toast('已恢复原文');
+  },
+  setUndo:function(on){
+    var b=document.getElementById('aiPunctUndo');
+    if(b)b.style.display=on?'flex':'none';
+    if(!on)this._prePunct=null;
   },
   showDraft:function(){
     this.openModal();
@@ -1912,6 +1931,15 @@ var Rec={
     var d=this.draft;if(!d)return;
     $('#draftTitle').value=d.title;
     $('#draftText').value=d.text;
+    var h='';
+    (d.tags||[]).forEach(function(t,i){h+='<span class="chip x" onclick="Rec.rmTag('+i+')">#'+esc(t)+' <svg class="ico" style="width:10px;height:10px"><use href="#i-x"/></svg></span>';});
+    h+='<span class="chip g" onclick="Rec.addTag()">+ 标签</span>';
+    $('#draftTags').innerHTML=h;
+    this.refreshTitleOpts();
+    this.refreshTagSugs();
+  },
+  refreshTitleOpts:function(){
+    var d=this.draft;if(!d)return;
     this._titleOpts=genTitleOptions(d.text);
     var ob=$('#draftTitleOpts');
     if(ob){
@@ -1919,10 +1947,9 @@ var Rec={
       (this._titleOpts||[]).forEach(function(o,i){oh+='<span class="chip g" onclick="Rec.pickTitle('+i+')">'+esc(o)+'</span>';});
       ob.innerHTML=oh;
     }
-    var h='';
-    (d.tags||[]).forEach(function(t,i){h+='<span class="chip x" onclick="Rec.rmTag('+i+')">#'+esc(t)+' <svg class="ico" style="width:10px;height:10px"><use href="#i-x"/></svg></span>';});
-    h+='<span class="chip g" onclick="Rec.addTag()">+ 标签</span>';
-    $('#draftTags').innerHTML=h;
+  },
+  refreshTagSugs:function(){
+    var d=this.draft;if(!d)return;
     this._tagOpts=extractKeywords(d.text,9).filter(function(t){return (d.tags||[]).indexOf(t)<0;}).slice(0,5);
     var sb=$('#draftTagSugs');
     if(sb){
@@ -1944,14 +1971,8 @@ var Rec={
     this._draftTimer2=setTimeout(function(){
       if(!self.draft)return;
       self.draft.text=$('#draftText').value;
-      self._tagOpts=extractKeywords(self.draft.text,9).filter(function(t){return (self.draft.tags||[]).indexOf(t)<0;}).slice(0,5);
-      var sb=$('#draftTagSugs');
-      if(sb){
-        var sh='';
-        if(self._tagOpts.length)sh+='<span class="sug-lbl">推荐</span>';
-        self._tagOpts.forEach(function(t,i){sh+='<span class="chip g" onclick="Rec.addSugTag('+i+')">+ '+esc(t)+'</span>';});
-        sb.innerHTML=sh;
-      }
+      self.refreshTagSugs();
+      if(self._prePunct)self.setUndo(false);
     },400);
   },
   pickTitle:function(i){
@@ -2421,14 +2442,18 @@ var Graph={
     });
     return out;
   },
-  /* 核心布局：放射状思维导图 */
+  /* 核心布局：放射状思维导图（参考图风格） */
   layout:function(){
     this.nodes=[]; this.edgeList=[];
     var ks=Object.keys(this.freq);
     if(!ks.length)return;
     // 按频次排序
     ks.sort(function(a,b){return Graph.freq[b]-Graph.freq[a];});
-    var cx=170, cy=190, W=340, H=380;
+    var maxFreq=this.freq[ks[0]]||1;
+    // 画布放大，留足呼吸空间
+    var W=400, H=420, cx=W/2, cy=H/2;
+    // 更新 SVG viewBox
+    var svg=$('#graph'); if(svg) svg.setAttribute('viewBox','0 0 '+W+' '+H);
     // 中心节点：频次最高的词（或选中的词）
     var centerKw=this.sel||ks[0];
     // 一级节点：与中心节点有共现的词，按共现强度排序
@@ -2437,34 +2462,65 @@ var Graph={
     // 如果一级节点太少，补充高频词
     if(primaries.length<3){
       var used={};used[centerKw]=1;primaries.forEach(function(k){used[k]=1;});
-      ks.forEach(function(k){if(!used[k]&&primaries.length<6)primaries.push(k);});
+      ks.forEach(function(k){if(!used[k]&&primaries.length<8)primaries.push(k);});
     }
-    primaries=primaries.slice(0,6); // 最多6个一级节点
+    primaries=primaries.slice(0,8); // 最多8个一级节点
     // 二级节点：与一级节点有关联的其他词
     var secondaries=[];
     var pSet={};pSet[centerKw]=1;primaries.forEach(function(k){pSet[k]=1;});
     ks.forEach(function(k){
-      if(!pSet[k]&&Graph.freq[k]>=2)secondaries.push(k);
+      if(!pSet[k]&&Graph.freq[k]>=1)secondaries.push(k);
     });
-    secondaries=secondaries.slice(0,12);
+    secondaries=secondaries.slice(0,20);
+    // 颜色/尺寸工具函数：按频次映射到 [min,max]
+    function clampR(freq, rMin, rMax){
+      if(maxFreq<=1)return (rMin+rMax)/2;
+      var t=(freq-1)/(maxFreq-1);
+      return rMin+(rMax-rMin)*Math.sqrt(t); // sqrt 让低频差异更明显
+    }
+    function nodeColor(type, freq){
+      if(type==='center') return 'var(--green)';
+      if(type==='primary'){
+        // 高频→深绿(--green)，低频→浅绿(--green-l)
+        var a=clampR(freq, .25, 1);
+        return 'rgba(46,125,50,'+a.toFixed(2)+')';
+      }
+      // secondary: 极淡绿或近白
+      var a=clampR(freq, .06, .22);
+      return 'rgba(46,125,50,'+a.toFixed(2)+')';
+    }
+    function textColor(type, freq){
+      if(type==='center') return '#fff';
+      if(type==='primary') return freq>=maxFreq*.6 ? '#fff' : 'var(--text)';
+      return 'var(--text2)';
+    }
     // 构建节点数据
     var self=this;
-    // 中心
-    this.nodes.push({id:centerKw, label:centerKw, type:'center', x:cx, y:cy, r:28, count:this.freq[centerKw]||0});
-    // 一级节点：均匀分布在中心周围
-    var pR=95, pAngle=Math.PI*2/primaries.length, pStart=-Math.PI/2;
+    // 中心：固定大圆，深绿
+    this.nodes.push({
+      id:centerKw, label:centerKw, type:'center', x:cx, y:cy,
+      r: clampR(this.freq[centerKw]||1, 30, 38),
+      count:this.freq[centerKw]||0,
+      fill:'var(--green)', tColor:'#fff'
+    });
+    // 一级节点：均匀分布在中心周围，大小和颜色按频次
+    var pR=110, pAngle=Math.PI*2/primaries.length, pStart=-Math.PI/2;
     primaries.forEach(function(k,i){
       var a=pStart+pAngle*i;
       var x=cx+Math.cos(a)*pR, y=cy+Math.sin(a)*pR;
-      self.nodes.push({id:k,label:k,type:'primary',x:x,y:y,r:22,count:self.freq[k]||0,coCount:rel[k]||0});
-      // 边：中心→一级
+      var f=self.freq[k]||0;
+      self.nodes.push({
+        id:k,label:k,type:'primary',x:x,y:y,
+        r: clampR(f, 20, 30),
+        count:f, coCount:rel[k]||0,
+        fill:nodeColor('primary',f), tColor:textColor('primary',f)
+      });
       var str=(rel[k]||0)>=3?'strong':(rel[k]||0)>=2?'medium':'weak';
       self.addEdge({from:centerKw,to:k,type:str});
     });
     // 二级节点：分布在对应一级节点外围
-    var sR=55, usedS={};
+    var sR=60, usedS={}, sPerP=3; // 每个一级最多3个二级
     secondaries.forEach(function(k,i){
-      // 找到与该二级节点关联最强的一级节点作为父节点
       var bestP=null,bestV=0;
       primaries.forEach(function(p){
         var ck=p<k?p+'|'+k:k+'|'+p;
@@ -2473,18 +2529,21 @@ var Graph={
       });
       if(!bestP)bestP=primaries[i%primaries.length];
       var pNode=self.findNode(bestP);
-      if(!pNode)return;
-      // 在父节点周围找空位
-      var sAngle=Math.PI*2/4; // 每个一级节点最多4个二级
+      if(!pNode||(usedS[bestP]||0)>=sPerP)return;
       var baseA=Math.atan2(pNode.y-cy,pNode.x-cx);
       var si=(usedS[bestP]||0);
-      var a=baseA+sAngle*(si-1.5);
+      var spread=Math.PI*2/sPerP;
+      var a=baseA+spread*(si-(sPerP-1)/2);
       var x=pNode.x+Math.cos(a)*sR, y=pNode.y+Math.sin(a)*sR;
-      // 边界约束
-      x=Math.max(30,Math.min(x,W-30));y=Math.max(30,Math.min(y,H-30));
-      self.nodes.push({id:k,label:k,type:'secondary',x:x,y:y,r:16,count:self.freq[k]||0,parent:bestP});
+      x=Math.max(35,Math.min(x,W-35));y=Math.max(35,Math.min(y,H-35));
+      var f=self.freq[k]||0;
+      self.nodes.push({
+        id:k,label:k,type:'secondary',x:x,y:y,
+        r: clampR(f, 14, 22),
+        count:f, parent:bestP,
+        fill:nodeColor('secondary',f), tColor:textColor('secondary',f)
+      });
       usedS[bestP]=(usedS[bestP]||0)+1;
-      // 边：一级→二级
       var str=bestV>=3?'strong':bestV>=2?'medium':'weak';
       self.addEdge({from:bestP,to:k,type:str});
     });
@@ -2509,7 +2568,7 @@ var Graph={
     var svg=$('#graph');
     if(!svg)return;
     if(!ks.length){
-      svg.innerHTML='<text x="170" y="190" text-anchor="middle" fill="var(--text3)" font-size="13">还没有关键词<br/>去树干录一条，标签会自动生成图谱</text>';
+      svg.innerHTML='<text x="200" y="210" text-anchor="middle" fill="var(--text3)" font-size="13">还没有关键词<br/>去树干录一条，标签会自动生成图谱</text>';
       $('#graphDetail').innerHTML='';$('#graphLegend').innerHTML='';$('#graphPreview').innerHTML='';
       return;
     }
@@ -2520,7 +2579,6 @@ var Graph={
     if(this.sel)this.detail(this.sel);else $('#graphDetail').innerHTML='';
   },
   renderSVG:function(svg){
-    var ns='http://www.w3.org/2000/svg';
     var h='';
     // 绘制连线（在节点下层）
     h+='<g class="gedges">';
@@ -2532,25 +2590,26 @@ var Graph={
       h+='<line class="'+cls+'" x1="'+n1.x+'" y1="'+n1.y+'" x2="'+n2.x+'" y2="'+n2.y+'"/>';
     }
     h+='</g>';
-    // 绘制节点
+    // 绘制节点（使用动态 fill/tColor）
     h+='<g class="gnodes">';
     for(var i=0;i<this.nodes.length;i++){
       var nd=this.nodes[i];
       var selCls=(this.sel===nd.id)?' sel':'';
+      var fill=nd.fill||'var(--green)';
+      var tClr=nd.tColor||'#fff';
       if(nd.type==='center'){
         h+='<g class="gnode-center'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
-          '<circle cx="'+nd.x+'" cy="'+nd.y+'" r="'+nd.r+'"/>'+
-          '<text x="'+nd.x+'" y="'+nd.y+'">'+esc(nd.label)+'</text></g>';
-      }else if(nd.type==='primary'){
-        var rw=nd.r*2+20,rh=nd.r+10,rx=nd.x-rw/2,ry=nd.y-rh/2;
-        h+='<g class="gnode-primary'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
-          '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="12"/>'+
-          '<text x="'+nd.x+'" y="'+nd.y+'">'+esc(nd.label)+'</text></g>';
+          '<circle cx="'+nd.x+'" cy="'+nd.y+'" r="'+nd.r+'" fill="'+fill+'"/>'+
+          '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text></g>';
       }else{
-        var rw=nd.label.length*11+16,rh=24,rx=nd.x-rw/2,ry=nd.y-rh/2;
-        h+='<g class="gnode-secondary'+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
-          '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="12"/>'+
-          '<text x="'+nd.x+'" y="'+nd.y+'">'+esc(nd.label)+'</text></g>';
+        // primary 和 secondary 都用圆角矩形（pill 形状，对齐参考图）
+        var rw=nd.label.length*11+18, rh=nd.r*1.1+8;
+        rw=Math.max(rw, nd.r*1.6);
+        var rx=nd.x-rw/2, ry=nd.y-rh/2;
+        var clsName=nd.type==='primary'?'gnode-primary':'gnode-secondary';
+        h+='<g class="'+clsName+selCls+'" onclick="Graph.select(\''+nd.id+'\')">'+
+          '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="'+(rh/2)+'" fill="'+fill+'" stroke="var(--green)" stroke-width="'+(nd.type==='primary'?1:.7)+'"/>'+
+          '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text></g>';
       }
     }
     h+='</g>';
@@ -2566,7 +2625,7 @@ var Graph={
     // 复制当前 SVG 的缩小版作为预览
     var src=$('#graph');
     if(!src||!src.innerHTML){$('#graphPreview').innerHTML='';return;}
-    $('#graphPreview').innerHTML='<svg viewBox="0 0 340 380">'+src.innerHTML+'</svg>';
+    $('#graphPreview').innerHTML='<svg viewBox="0 0 400 420">'+src.innerHTML+'</svg>';
   },
   selectKw:function(el){
     var k=el?el.dataset.kw:null;
@@ -3101,6 +3160,7 @@ function seed(){
           <button class="btn btn-p" id="recSaveBtn" onclick="Rec.save()">完成</button>
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
+          <button class="btn btn-ghost" id="aiPunctUndo" style="display:none" onclick="Rec.undoPunct()"><svg><use href="#i-back"/></svg>撤销</button>
           <button class="btn btn-ghost" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟</button>
           <button class="btn btn-ghost" id="aiPunctBtn" onclick="Rec.aiPunct()"><svg><use href="#i-wand"/></svg>AI 标点</button>
         </div>
