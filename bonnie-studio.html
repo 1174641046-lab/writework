@@ -870,7 +870,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.26</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.27</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -2424,15 +2424,26 @@ var Leaf={
 
 /* ================= 枝条图谱（放射状思维导图） ================= */
 var Graph={
-  freq:{}, co:{}, sel:null, zoom:1, nodes:[], edgeList:[],
-  /* 计算词频和共现 */
+  freq:{}, co:{}, noteIds:{}, sel:null, zoom:1, nodes:[], edgeList:[],
+  /* 计算词频和共现：只采集【真实灵感】，由「灵感内容关键词 + 用户标签」共同生长 */
   build:function(){
-    this.freq={}; this.co={};
-    Data.notes.forEach(function(n){
-      var ts=(n.tags||[]).slice(0,8);
-      ts.forEach(function(t){Graph.freq[t]=(Graph.freq[t]||0)+1;});
-      for(var i=0;i<ts.length;i++)for(var j=i+1;j<ts.length;j++){
-        var k=ts[i]<ts[j]?ts[i]+'|'+ts[j]:ts[j]+'|'+ts[i];
+    this.freq={}; this.co={}; this.noteIds={};
+    // 排除示例(seed)数据——图谱必须长在每个用户自己的灵感上，而不是固定演示
+    var notes=Data.notes.filter(function(n){return !n.seed;});
+    notes.forEach(function(n){
+      // 灵感内容关键词：标题 + 正文自动抽取（最多 6 个）
+      var kw=extractKeywords((n.title||'')+' '+(n.text||''), 6);
+      // 与用户显式标签合并，去重后作为本灵感贡献的词
+      var terms={};
+      (n.tags||[]).forEach(function(t){terms[t]=1;});
+      kw.forEach(function(t){terms[t]=1;});
+      var arr=Object.keys(terms);
+      arr.forEach(function(t){
+        Graph.freq[t]=(Graph.freq[t]||0)+1;            // 词频 = 提及该词的灵感条数
+        (Graph.noteIds[t]=Graph.noteIds[t]||[]).push(n.id);
+      });
+      for(var i=0;i<arr.length;i++)for(var j=i+1;j<arr.length;j++){
+        var k=arr[i]<arr[j]?arr[i]+'|'+arr[j]:arr[j]+'|'+arr[i];
         Graph.co[k]=(Graph.co[k]||0)+1;
       }
     });
@@ -2580,7 +2591,7 @@ var Graph={
     var svg=$('#graph');
     if(!svg)return;
     if(!ks.length){
-      svg.innerHTML='<text x="200" y="210" text-anchor="middle" fill="var(--text3)" font-size="13">还没有关键词<br/>去树干录一条，标签会自动生成图谱</text>';
+      svg.innerHTML='<text x="200" y="210" text-anchor="middle" fill="var(--text3)" font-size="13">还没有灵感<tspan x="200" dy="20">图谱会从你的灵感和标签里长出来</tspan><tspan x="200" dy="20">去树根录一条试试</tspan></text>';
       $('#graphDetail').innerHTML='';$('#graphLegend').innerHTML='';$('#graphPreview').innerHTML='';
       return;
     }
@@ -2679,7 +2690,8 @@ var Graph={
   detail:function(kw){
     var rel=this.related(kw);
     var relKs=Object.keys(rel).sort(function(a,b){return rel[b]-rel[a];}).slice(0,10);
-    var list=Data.notes.filter(function(n){return (n.tags||[]).indexOf(kw)>=0;});
+    var ids=this.noteIds[kw]||[];
+    var list=Data.notes.filter(function(n){return ids.indexOf(n.id)>=0 && !n.seed;});
     var h='<div class="sec-t"><h2><svg><use href="#i-eye"/></svg>「'+esc(kw)+'」相关</h2><span>'+list.length+' 条</span></div>';
     if(relKs.length){
       h+='<div class="card" style="padding:12px 12px 10px"><div class="fl" style="margin-bottom:7px;color:var(--text2);font-size:12.5px">常一起出现的词</div>'+
