@@ -870,7 +870,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.24</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.25</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -2592,6 +2592,9 @@ var Graph={
   },
   renderSVG:function(svg){
     var h='';
+    // SVG 滤镜：轻柔投影（让 pill 节点有浮起感）
+    h+='<defs><filter id="gsh" x="-20%" y="-20%" width="140%" height="140%">'+
+      '<feDropShadow dx="0" dy="1.2" stdDeviation="1.5" flood-color="#2E7D32" flood-opacity=".13"/></filter></defs>';
     // 计算选中节点的关联节点集合（用于淡化非关联）
     var connSet={};
     if(this.sel){
@@ -2602,7 +2605,7 @@ var Graph={
         else if(e.to===this.sel)connSet[e.from]=1;
       }
     }
-    // 绘制连线（在节点下层）
+    // 绘制曲线连线（二次贝塞尔，中点垂直偏移形成柔和弧度）
     h+='<g class="gedges">';
     for(var i=0;i<this.edgeList.length;i++){
       var e=this.edgeList[i];
@@ -2610,11 +2613,16 @@ var Graph={
       if(!n1||!n2)continue;
       var cls=e.type==='strong'?'gedge-strong':e.type==='medium'?'gedge-medium':e.type==='cross'?'gedge-cross':'gedge-weak';
       var dimCls=(this.sel && !connSet[e.from] && !connSet[e.to])?' dim':'';
-      h+='<line class="'+cls+dimCls+'" x1="'+n1.x+'" y1="'+n1.y+'" x2="'+n2.x+'" y2="'+n2.y+'"/>';
+      var mx=(n1.x+n2.x)/2, my=(n1.y+n2.y)/2;
+      var dx=n2.x-n1.x, dy=n2.y-n1.y;
+      var len=Math.sqrt(dx*dx+dy*dy)||1;
+      var off=len*0.12*(i%2?1:-1);
+      var cx=mx+(-dy/len)*off, cy=my+(dx/len)*off;
+      h+='<path class="'+cls+dimCls+'" d="M'+n1.x+' '+n1.y+' Q'+cx.toFixed(1)+' '+cy.toFixed(1)+' '+n2.x+' '+n2.y+'"/>';
     }
     h+='</g>';
-    // 绘制节点（使用动态 fill/tColor + 频次角标 + 选中淡化）
-    h+='<g class="gnodes">';
+    // 绘制节点（使用动态 fill/tColor + 频次角标 + 选中淡化 + 投影）
+    h+='<g class="gnodes" filter="url(#gsh)">';
     for(var i=0;i<this.nodes.length;i++){
       var nd=this.nodes[i];
       var selCls=(this.sel===nd.id)?' sel':'';
