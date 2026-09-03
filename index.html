@@ -870,7 +870,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.27</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.28</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -2425,21 +2425,15 @@ var Leaf={
 /* ================= 枝条图谱（放射状思维导图） ================= */
 var Graph={
   freq:{}, co:{}, noteIds:{}, sel:null, zoom:1, nodes:[], edgeList:[],
-  /* 计算词频和共现：只采集【真实灵感】，由「灵感内容关键词 + 用户标签」共同生长 */
+  /* 计算词频和共现：只采集【真实灵感】的标签 */
   build:function(){
     this.freq={}; this.co={}; this.noteIds={};
-    // 排除示例(seed)数据——图谱必须长在每个用户自己的灵感上，而不是固定演示
+    // 排除示例(seed)数据——图谱只反映用户自己的真实标签，而非固定演示
     var notes=Data.notes.filter(function(n){return !n.seed;});
     notes.forEach(function(n){
-      // 灵感内容关键词：标题 + 正文自动抽取（最多 6 个）
-      var kw=extractKeywords((n.title||'')+' '+(n.text||''), 6);
-      // 与用户显式标签合并，去重后作为本灵感贡献的词
-      var terms={};
-      (n.tags||[]).forEach(function(t){terms[t]=1;});
-      kw.forEach(function(t){terms[t]=1;});
-      var arr=Object.keys(terms);
+      var arr=(n.tags||[]).filter(function(t){return t;});
       arr.forEach(function(t){
-        Graph.freq[t]=(Graph.freq[t]||0)+1;            // 词频 = 提及该词的灵感条数
+        Graph.freq[t]=(Graph.freq[t]||0)+1;            // 词频 = 打过该标签的灵感条数
         (Graph.noteIds[t]=Graph.noteIds[t]||[]).push(n.id);
       });
       for(var i=0;i<arr.length;i++)for(var j=i+1;j<arr.length;j++){
@@ -2591,7 +2585,7 @@ var Graph={
     var svg=$('#graph');
     if(!svg)return;
     if(!ks.length){
-      svg.innerHTML='<text x="200" y="210" text-anchor="middle" fill="var(--text3)" font-size="13">还没有灵感<tspan x="200" dy="20">图谱会从你的灵感和标签里长出来</tspan><tspan x="200" dy="20">去树根录一条试试</tspan></text>';
+      svg.innerHTML='<text x="200" y="210" text-anchor="middle" fill="var(--text3)" font-size="13">还没有标签<tspan x="200" dy="20">图谱会从你的标签里长出来</tspan><tspan x="200" dy="20">去树根录一条试试</tspan></text>';
       $('#graphDetail').innerHTML='';$('#graphLegend').innerHTML='';$('#graphPreview').innerHTML='';
       return;
     }
