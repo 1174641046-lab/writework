@@ -840,7 +840,20 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
           <button data-a="on" onclick="Me.saveAutoPunct(true)">存稿前自动</button>
         </div>
       </div>
-      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。AI 标点 / AI 标题 / AI 润色均走同一代理（DeepSeek 驱动），失败时按原文保存。</div>
+      <div class="row" style="display:block;margin-top:10px">
+        <div class="lb" style="margin-bottom:7px"><b>AI 通道</b><span>直连：浏览器直接调 api.deepseek.com，国内可用；代理：走你自己的 Worker</span></div>
+        <div class="seg" id="aiModeSeg" style="width:100%">
+          <button data-a="direct" onclick="Me.saveAIMode('direct')" class="on">直连 DeepSeek</button>
+          <button data-a="proxy" onclick="Me.saveAIMode('proxy')">走代理</button>
+        </div>
+      </div>
+      <div id="dsKeyOpts" style="margin-top:8px">
+        <div class="row" style="display:block">
+          <div class="lb" style="margin-bottom:7px"><b>DeepSeek Key</b><span>以 sk- 开头，只保存在本机浏览器，不会上传</span></div>
+          <input type="password" id="dsKey" placeholder="sk-..." onchange="Me.saveAIKey()">
+        </div>
+      </div>
+      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。AI 标点 / AI 标题 / AI 润色默认直连 DeepSeek（国内可访问），也可切换为走自建代理。</div>
     </div>
 
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
@@ -870,7 +883,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.30</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.31</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1876,9 +1889,71 @@ var Rec={
     var base=(Data.settings.whisperProxy||'').replace(/\/transcribe\/?$/,'');
     return (base&&/^https?:\/\//.test(base))?base:'';
   },
+  /* ---- AI 通道：直连 DeepSeek（国内可直连）/ 自建代理 ---- */
+  _dsPrompts:{
+    '/punctuate':'你是中文口述稿整理助手。任务：给文本添加合适的标点符号（，。？！、：）并按语义用空行分段。严格保留原文用字，绝不增删改任何字词，不添加解释或前缀，只输出整理后的文本。',
+    '/polish':'你是中文笔记润色助手。在不改变原意、不增删事实的前提下，优化文字稿：补全标点、理顺语句、让表达更通顺自然，可按语义用空行分段。只输出润色后的文本，不要解释或前缀。',
+    '/title':'你是自媒体选题助手。根据口述/草稿，生成一个吸睛且准确的短标题（不超过18字，不要书名号、引号或任何前缀），并给出3到5个中文标签（每个2-6字）。只输出一个 JSON 对象：{"title":"...","tags":["...","..."]}，不要任何解释或前后缀。'
+  },
+  _useDirect:function(){
+    return (Data.settings.aiMode||'direct')==='direct'&&!!(Data.settings.dsKey||'').trim();
+  },
+  aiReady:function(){
+    if((Data.settings.aiMode||'direct')==='direct')return !!(Data.settings.dsKey||'').trim();
+    return !!this._punctBase();
+  },
+  _aiNeedMsg:function(){
+    return (Data.settings.aiMode||'direct')==='direct'?'请先在设置里填写 DeepSeek Key':'未配置 AI 代理地址';
+  },
+  _dsTemp:function(route){return route==='/title'?0.6:(route==='/polish'?0.4:0);},
+  _parseJSONSafe:function(s){
+    if(!s)return {};
+    s=String(s).trim().replace(/^```(?:json)?/i,'').replace(/```$/i,'').trim();
+    try{return JSON.parse(s);}catch(e){}
+    var a=s.indexOf('{'),b=s.lastIndexOf('}');
+    if(a>=0&&b>a){try{return JSON.parse(s.slice(a,b+1));}catch(e){}}
+    return {};
+  },
+  /* 浏览器直连 api.deepseek.com（国内可直连，且该域名允许跨域） */
+  _dsDirect:function(route,payload,ok,fail){
+    var key=(Data.settings.dsKey||'').trim();
+    var sys=this._dsPrompts[route]||'';
+    var settled=false;
+    var ac=(typeof AbortController!=='undefined')?new AbortController():null;
+    var to=setTimeout(function(){if(!settled){settled=true;ac&&ac.abort();fail&&fail(new Error('请求超时（DeepSeek 未响应）'));}},30000);
+    fetch('https://api.deepseek.com/chat/completions',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'deepseek-chat',temperature:this._dsTemp(route),max_tokens:2000,
+        messages:[{role:'system',content:sys},{role:'user',content:String((payload&&payload.text)||'').slice(0,8000)}]}),
+      signal:ac?ac.signal:undefined})
+      .then(function(r){return r.text().then(function(raw){
+        var j=null;try{j=JSON.parse(raw);}catch(e){}
+        if(!r.ok){var em=(j&&j.error&&(j.error.message||j.error))||raw||('HTTP '+r.status);throw new Error(String(em).slice(0,140));}
+        return j||{};
+      });})
+      .then(function(j){
+        if(settled)return;settled=true;clearTimeout(to);
+        var ch=j.choices&&j.choices[0]&&j.choices[0].message;
+        var c=((ch&&ch.content)||'').trim();
+        if(route==='/title'){
+          var p=Rec._parseJSONSafe(c);
+          ok&&ok({title:String(p.title||'').trim().slice(0,30),
+                  tags:(Array.isArray(p.tags)?p.tags:[]).map(String).filter(Boolean).slice(0,5)});
+        }else if(c){ok&&ok({text:c});}
+        else fail&&fail(new Error('未返回内容'));
+      })
+      .catch(function(e){if(settled)return;settled=true;clearTimeout(to);fail&&fail(e);});
+  },
   _punctRequest:function(text,ok,fail){
+    if(this._useDirect()){
+      this._dsDirect('/punctuate',{text:text},function(j){
+        var t=((j&&j.text)||'').trim();
+        if(t)ok&&ok(t);else fail&&fail(new Error('未返回内容'));
+      },fail);
+      return;
+    }
     var base=this._punctBase();
-    if(!base){fail&&fail(new Error('未配置 Whisper 代理地址'));return;}
+    if(!base){fail&&fail(new Error(this._aiNeedMsg()));return;}
     var settled=false;
     var to=setTimeout(function(){if(!settled){settled=true;fail&&fail(new Error('请求超时'));}},20000);
     fetch(base+'/punctuate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})})
@@ -1897,7 +1972,7 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    if(!this._punctBase()){toast('未配置 AI 代理地址');return;}
+    if(!this.aiReady()){toast(this._aiNeedMsg());return;}
     var btn=document.getElementById('aiPunctBtn');
     if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>优化中…';}
     var self=this;
@@ -1913,7 +1988,7 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('先写点内容，才能生成标题');return;}
-    if(!this._punctBase()){toast('未配置 AI 代理地址');return;}
+    if(!this.aiReady()){toast(this._aiNeedMsg());return;}
     var btn=document.getElementById('aiTitleBtn');
     if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>生成中…';}
     var self=this;
@@ -1932,7 +2007,7 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    if(!this._punctBase()){toast('未配置 AI 代理地址');return;}
+    if(!this.aiReady()){toast(this._aiNeedMsg());return;}
     var btn=document.getElementById('aiPolishBtn');
     if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>润色中…';}
     var self=this;
@@ -1947,8 +2022,9 @@ var Rec={
     },function(){toast('AI 润色失败，保持原文');restore();});
   },
   _aiRequest:function(route,payload,ok,fail){
+    if(this._useDirect()){this._dsDirect(route,payload,ok,fail);return;}
     var base=this._punctBase();
-    if(!base){fail&&fail(new Error('未配置 AI 代理地址'));return;}
+    if(!base){fail&&fail(new Error(this._aiNeedMsg()));return;}
     var settled=false;
     var to=setTimeout(function(){if(!settled){settled=true;fail&&fail(new Error('请求超时'));}},20000);
     fetch(base+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
@@ -2101,7 +2177,7 @@ var Rec={
     d.text=$('#draftText').value.trim();
     if(!d.text&&!d.audio){toast('内容为空');return;}
     var self=this;
-    if(Data.settings.autoPunct&&d.text&&this._punctBase()){
+    if(Data.settings.autoPunct&&d.text&&this.aiReady()){
       var sb=document.getElementById('recSaveBtn');
       if(sb){sb.disabled=true;sb.textContent='AI 优化中…';}
       this._punctRequest(d.text,function(t){
@@ -3051,6 +3127,21 @@ var Me={
     $('#asrCustomOpts').style.display=(am==='whisper')?'block':'none';
     var ap=!!Data.settings.autoPunct;
     $$('#autoPunctSeg button').forEach(function(b){b.classList.toggle('on',(b.dataset.a==='on')===ap);});
+    var aim=Data.settings.aiMode||'direct';
+    $$('#aiModeSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===aim);});
+    var dko=document.getElementById('dsKeyOpts');if(dko)dko.style.display=(aim==='direct')?'block':'none';
+    if($('#dsKey'))$('#dsKey').value=Data.settings.dsKey||'';
+  },
+  saveAIMode:function(mode){
+    Data.settings.aiMode=mode;Data.saveSettings();
+    $$('#aiModeSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===mode);});
+    var o=document.getElementById('dsKeyOpts');if(o)o.style.display=(mode==='direct')?'block':'none';
+    toast(mode==='direct'?'AI 已切为直连 DeepSeek（国内可用）':'AI 已切为走自建代理');
+  },
+  saveAIKey:function(){
+    var v=($('#dsKey').value||'').trim();
+    Data.settings.dsKey=v;Data.saveSettings();
+    toast(v?'DeepSeek Key 已保存到本机':'已清空 DeepSeek Key');
   },
   saveASR:function(mode){
     Data.settings.asrMode=mode;Data.saveSettings();
@@ -3208,6 +3299,17 @@ function seed(){
 /* ================= 启动 ================= */
 (function boot(){
   Data.load();
+  // 支持 ?dskey=sk-xxx 一键写入 DeepSeek Key（写入后立即从地址栏清除）
+  try{
+    var qs=location.search||'';
+    var mm=qs.match(/[?&]dskey=([^&]+)/);
+    if(mm&&mm[1]){
+      Data.settings.dsKey=decodeURIComponent(mm[1]).trim();
+      Data.settings.aiMode='direct';
+      Data.saveSettings();
+      if(history&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
+    }
+  }catch(e){}
   seed();
   // 迁移：旧版示例数据无 seed 标记，首次启动新版本时统一打上（此时仅含示例，无用户真实数据）
   if(LS.get('seeded',false)&&!LS.get('seedMarked',false)){
