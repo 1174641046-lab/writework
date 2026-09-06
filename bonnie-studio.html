@@ -834,13 +834,13 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         </div>
       </div>
       <div class="row" style="display:block;margin-top:10px">
-        <div class="lb" style="margin-bottom:7px"><b>AI 标点</b><span>用 AI 给文字稿加标点、按语义分段（整理弹窗里可手动点「AI 标点」）</span></div>
+        <div class="lb" style="margin-bottom:7px"><b>AI 标点</b><span>用 AI 给文字稿加标点、按语义分段（整理弹窗里可手动点「AI 标点 / AI 标题 / AI 润色」）</span></div>
         <div class="seg" id="autoPunctSeg" style="width:100%">
           <button data-a="off" onclick="Me.saveAutoPunct(false)">手动</button>
           <button data-a="on" onclick="Me.saveAutoPunct(true)">存稿前自动</button>
         </div>
       </div>
-      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。AI 标点走同一代理，失败时按原文保存。</div>
+      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。AI 标点 / AI 标题 / AI 润色均走同一代理（DeepSeek 驱动），失败时按原文保存。</div>
     </div>
 
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
@@ -870,7 +870,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.28</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.29</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1879,32 +1879,81 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    if(!this._punctBase()){toast('未配置 Whisper 代理地址');return;}
+    if(!this._punctBase()){toast('未配置 AI 代理地址');return;}
     var btn=document.getElementById('aiPunctBtn');
     if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>优化中…';}
     var self=this;
     var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标点';}};
     this._punctRequest(txt,function(t){
-      self._prePunct=txt;
+      self._capturePre();
       self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
-      self.refreshTagSugs();self.refreshTitleOpts();self.setUndo(true);
-      toast('已优化标点，可撤销');restore();
+      self.refreshTagSugs();self.refreshTitleOpts();self._showAiUndo(true);
+      toast('已 AI 优化标点，可撤销');restore();
     },function(){toast('AI 标点失败，保持原文');restore();});
   },
-  undoPunct:function(){
-    if(!this._prePunct)return;
-    var ab=document.getElementById('aiPunctBtn');
-    if(ab&&ab.disabled)return;
-    var t=this._prePunct;this._prePunct=null;
-    this.draft.text=t;$('#draftText').value=t;this.cacheDraft();
-    this.refreshTagSugs();this.refreshTitleOpts();this.setUndo(false);
-    toast('已恢复原文');
+  aiTitle:function(){
+    var d=this.draft;if(!d)return;
+    var txt=($('#draftText').value||'').trim();
+    if(!txt){toast('先写点内容，才能生成标题');return;}
+    if(!this._punctBase()){toast('未配置 AI 代理地址');return;}
+    var btn=document.getElementById('aiTitleBtn');
+    if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>生成中…';}
+    var self=this;
+    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标题';}};
+    this._aiRequest('/title',{text:txt},function(j){
+      self._capturePre();
+      if(j&&j.title){self.draft.title=j.title;$('#draftTitle').value=j.title;}
+      if(j&&Array.isArray(j.tags)&&j.tags.length){
+        j.tags.forEach(function(t){if((self.draft.tags||[]).indexOf(t)<0)self.draft.tags.push(t);});
+      }
+      self.paintDraft();self.cacheDraft();self._showAiUndo(true);
+      toast('已用 AI 生成标题与标签');restore();
+    },function(){toast('AI 标题失败，保持原样');restore();});
   },
-  setUndo:function(on){
+  aiPolish:function(){
+    var d=this.draft;if(!d)return;
+    var txt=($('#draftText').value||'').trim();
+    if(!txt){toast('没有可优化的文字');return;}
+    if(!this._punctBase()){toast('未配置 AI 代理地址');return;}
+    var btn=document.getElementById('aiPolishBtn');
+    if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>润色中…';}
+    var self=this;
+    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 润色';}};
+    this._aiRequest('/polish',{text:txt},function(j){
+      var t=(j&&j.text||'').trim();
+      if(!t){toast('AI 润色未返回内容');restore();return;}
+      self._capturePre();
+      self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
+      self.refreshTagSugs();self.refreshTitleOpts();self._showAiUndo(true);
+      toast('已 AI 润色，可撤销');restore();
+    },function(){toast('AI 润色失败，保持原文');restore();});
+  },
+  _aiRequest:function(route,payload,ok,fail){
+    var base=this._punctBase();
+    if(!base){fail&&fail(new Error('未配置 AI 代理地址'));return;}
+    var settled=false;
+    var to=setTimeout(function(){if(!settled){settled=true;fail&&fail(new Error('请求超时'));}},20000);
+    fetch(base+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json().catch(function(){return {};});})
+      .then(function(j){if(settled)return;settled=true;clearTimeout(to);ok&&ok(j);})
+      .catch(function(e){if(settled)return;settled=true;clearTimeout(to);fail&&fail(e);});
+  },
+  _capturePre:function(){
+    if(!this._aiPre)this._aiPre={text:this.draft.text,title:this.draft.title,tags:(this.draft.tags||[]).slice()};
+  },
+  _showAiUndo:function(on){
     var b=document.getElementById('aiPunctUndo');
     if(b)b.style.display=on?'flex':'none';
-    if(!on)this._prePunct=null;
   },
+  aiUndo:function(){
+    if(!this._aiPre)return;
+    var p=this._aiPre;this._aiPre=null;
+    this.draft.text=p.text;this.draft.title=p.title;this.draft.tags=p.tags.slice();
+    $('#draftText').value=p.text;$('#draftTitle').value=p.title;
+    this.cacheDraft();this.paintDraft();this._showAiUndo(false);
+    toast('已撤销 AI 修改');
+  },
+  setUndo:function(on){this._showAiUndo(on);if(!on)this._aiPre=null;},
   showDraft:function(){
     this.openModal();
     var m=document.getElementById('recModal');if(m)m.classList.add('review');
@@ -1976,7 +2025,7 @@ var Rec={
       if(!self.draft)return;
       self.draft.text=$('#draftText').value;
       self.refreshTagSugs();
-      if(self._prePunct)self.setUndo(false);
+      if(self._aiPre)self.setUndo(false);
     },400);
   },
   pickTitle:function(i){
@@ -2036,14 +2085,24 @@ var Rec={
     var self=this;
     if(Data.settings.autoPunct&&d.text&&this._punctBase()){
       var sb=document.getElementById('recSaveBtn');
-      if(sb){sb.disabled=true;sb.textContent='AI 标点优化中…';}
+      if(sb){sb.disabled=true;sb.textContent='AI 优化中…';}
       this._punctRequest(d.text,function(t){
         if(t){self.draft.text=t;$('#draftText').value=t;}
-        if(sb){sb.disabled=false;sb.textContent='完成';}
-        self._doSave();
+        // 自动用 AI 生成标题（用户未填时才生成），并补充标签
+        var finish=function(){
+          if(sb){sb.disabled=false;sb.textContent='完成';}
+          self._doSave();
+        };
+        if(!self.draft.title){
+          self._aiRequest('/title',{text:self.draft.text},function(j){
+            if(j&&j.title)self.draft.title=j.title;
+            if(j&&Array.isArray(j.tags))j.tags.forEach(function(tg){if((self.draft.tags||[]).indexOf(tg)<0)self.draft.tags.push(tg);});
+            finish();
+          },finish);
+        }else finish();
       },function(){
         if(sb){sb.disabled=false;sb.textContent='完成';}
-        toast('AI 标点失败，按原文保存');
+        toast('AI 优化失败，按原文保存');
         self._doSave();
       });
       return;
@@ -3203,9 +3262,12 @@ function seed(){
           <button class="btn btn-p" id="recSaveBtn" onclick="Rec.save()">完成</button>
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
-          <button class="btn btn-ghost" id="aiPunctUndo" style="display:none" onclick="Rec.undoPunct()"><svg><use href="#i-back"/></svg>撤销</button>
-          <button class="btn btn-ghost" onclick="Rec.regen()"><svg><use href="#i-refresh"/></svg>重拟</button>
+          <button class="btn btn-ghost" id="aiPunctUndo" style="display:none" onclick="Rec.aiUndo()"><svg><use href="#i-back"/></svg>撤销</button>
           <button class="btn btn-ghost" id="aiPunctBtn" onclick="Rec.aiPunct()"><svg><use href="#i-wand"/></svg>AI 标点</button>
+        </div>
+        <div class="rec-pop-btns" style="margin-top:8px">
+          <button class="btn btn-ghost" id="aiTitleBtn" onclick="Rec.aiTitle()"><svg><use href="#i-wand"/></svg>AI 标题</button>
+          <button class="btn btn-ghost" id="aiPolishBtn" onclick="Rec.aiPolish()"><svg><use href="#i-wand"/></svg>AI 润色</button>
         </div>
       </div>
     </div>
