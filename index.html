@@ -853,7 +853,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
           <input type="password" id="dsKey" placeholder="sk-..." onchange="Me.saveAIKey()">
         </div>
       </div>
-      <div class="tip" style="margin-top:10px">浏览器内置：零配置，iPhone 上可能不准。Whisper 代理：用你自己的 OpenAI Key 转写，更准且不限次数（代理地址已预填，需联网）。AI 标点 / AI 标题 / AI 润色默认直连 DeepSeek（国内可访问），也可切换为走自建代理。</div>
+      <div class="tip" style="margin-top:10px">浏览器内置：零配置，边录边出字，推荐国内使用（请用 Safari / Chrome 打开，微信内置浏览器不支持）。Whisper 代理：用 OpenAI 转写更准，但代理地址在国内可能无法访问，需自行更换可达的代理。AI 标点 / AI 标题 / AI 润色默认直连 DeepSeek（国内可访问），也可切换为走自建代理。</div>
     </div>
 
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
@@ -883,7 +883,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.31</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.32</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1565,7 +1565,7 @@ var Forest={
 /* ================= 录音识别 ================= */
 var Rec={
   mr:null,stream:null,chunks:[],timer:null,segTimer:null,sec:0,recording:false,paused:false,mode:'builtin',fullChunks:[],_flush:false,_stopReason:'',_finalAccum:'',_srFinal:'',holdMode:false,_holdRelease:false,_holdCancel:false,
-  sr:null,srOn:false,finalText:'',interim:'',
+  sr:null,srOn:false,finalText:'',interim:'',_srGot:false,_srWarnTimer:null,
   draft:null, /* {text,audio:Blob|null,audioUrl,title,tags} */
   tab:function(t){
     $$('.tabs button[data-rtab]').forEach(function(b){b.classList.toggle('on',b.dataset.rtab===t);});
@@ -1733,7 +1733,18 @@ var Rec={
   startSR:function(){
     var self=this;
     var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SR)return;
+    if(!SR){
+      this.setHint('此浏览器不支持实时识别，请用 Safari 或 Chrome 打开，或直接用文字输入');
+      toast('此浏览器不支持语音识别');
+      return;
+    }
+    var srmsg={
+      'not-allowed':'麦克风权限被拒绝，请在浏览器设置里允许',
+      'service-not-allowed':'系统语音服务不可用，请换 Safari/Chrome 打开（微信内置浏览器不支持）',
+      'network':'识别服务网络不可用',
+      'audio-capture':'没有获取到麦克风',
+      'language-not-supported':'当前浏览器不支持中文识别'
+    };
     try{
       this.sr=new SR();
       this.sr.lang='zh-CN';
@@ -1741,8 +1752,12 @@ var Rec={
       this.sr.interimResults=true;
       this.sr.maxAlternatives=1;
       if(this.sr.setGrammarConstraints)this.sr.setGrammarConstraints([]);
-      this._srFinal='';
+      this._srFinal='';this._srGot=false;
       this.sr.onresult=function(ev){
+        if(!self._srGot){
+          self._srGot=true;
+          if(self._srWarnTimer){clearTimeout(self._srWarnTimer);self._srWarnTimer=null;}
+        }
         var fin='',inter='';
         for(var i=0;i<ev.results.length;i++){
           var t=ev.results[i][0].transcript;
@@ -1756,15 +1771,28 @@ var Rec={
       };
       this.sr.onerror=function(e){
         if(e.error==='no-speech'||e.error==='aborted')return;
+        var msg=srmsg[e.error]||('识别出错：'+e.error);
+        self.setHint(msg);toast(msg);
         console.warn('SR error:',e.error);
       };
       this.sr.onend=function(){
         if(self.recording&&!self.paused&&self.srOn){try{self.sr.start();}catch(e){self.srOn=false;}}
       };
       this.sr.start();this.srOn=true;
-    }catch(e){this.sr=null;}
+      // 8 秒还没出字，给个温和提示，避免"一直聆听但没反应"
+      if(this._srWarnTimer)clearTimeout(this._srWarnTimer);
+      this._srWarnTimer=setTimeout(function(){
+        if(self.recording&&!self._srGot)self.setHint('还没识别到文字：确认麦克风已授权，并靠近一点说');
+      },8000);
+    }catch(e){
+      this.sr=null;
+      this.setHint('语音识别启动失败：'+(e&&e.message||e));
+    }
   },
-  stopSR:function(){if(this.sr&&this.srOn){try{this.sr.stop();}catch(e){}this.srOn=false;}},
+  stopSR:function(){
+    if(this._srWarnTimer){clearTimeout(this._srWarnTimer);this._srWarnTimer=null;}
+    if(this.sr&&this.srOn){try{this.sr.stop();}catch(e){}this.srOn=false;}
+  },
   finish:function(blob){
     var text=formatTranscript((this.finalText||'').trim());
     if(!text&&this.interim)text=formatTranscript(this.interim.trim());
@@ -3303,9 +3331,14 @@ function seed(){
   try{
     var qs=location.search||'';
     var mm=qs.match(/[?&]dskey=([^&]+)/);
+    var ar=qs.match(/[?&]asr=(builtin|whisper)/);
+    var dirty=false;
     if(mm&&mm[1]){
       Data.settings.dsKey=decodeURIComponent(mm[1]).trim();
-      Data.settings.aiMode='direct';
+      Data.settings.aiMode='direct';dirty=true;
+    }
+    if(ar&&ar[1]){Data.settings.asrMode=ar[1];dirty=true;}
+    if(dirty){
       Data.saveSettings();
       if(history&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
     }
