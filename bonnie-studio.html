@@ -107,6 +107,11 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 .acct-pill{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
 .acct-pill.on{background:var(--green);color:#fff}
 .acct-pill.on .adot{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.ver{background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.ver-h{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13.5px}
+.ver-t{width:100%;border:1px solid var(--line,#E3E0D4);border-radius:8px;padding:7px 9px;font-size:13.5px;margin-bottom:6px;background:#fff;color:var(--text)}
+.ver-b{width:100%;min-height:96px;border:1px solid var(--line,#E3E0D4);border-radius:8px;padding:8px 9px;font-size:13px;line-height:1.6;resize:vertical;background:#fff;color:var(--text)}
+.ver-acts{display:flex;gap:8px;margin-top:8px}
 .chip.b{background:var(--brown-l);color:var(--brown)}
 .chip.x{cursor:pointer}
 .chip.g{background:var(--card2);color:var(--text2);border:1px dashed var(--line)}
@@ -900,7 +905,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.35</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.36</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -952,6 +957,8 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     </div>
     <label class="fl" style="margin-bottom:8px;display:block">发布到账号</label>
     <div class="chips" id="dtAccounts" style="margin-bottom:14px"></div>
+    <div id="dtAiAcct" class="muted" style="font-size:11.5px;color:var(--text2);margin:-4px 0 12px"></div>
+    <div id="dtVersions" style="margin-bottom:14px"></div>
     <div style="margin-bottom:6px">
       <label class="fl" style="margin:0">配图 <span id="dtImgCount" style="font-weight:400"></span></label>
     </div>
@@ -1952,14 +1959,27 @@ var Rec={
     return (base&&/^https?:\/\//.test(base))?base:'';
   },
   /* ---- AI 通道：直连 DeepSeek（国内可直连）/ 自建代理 ---- */
-  _dsPrompts:{
-    '/punctuate':'你是中文口述稿整理助手。任务：给文本添加合适的标点符号（，。？！、：）并按语义用空行分段。严格保留原文用字，绝不增删改任何字词，不添加解释或前缀，只输出整理后的文本。',
-    '/polish':'你是中文笔记润色助手。在不改变原意、不增删事实的前提下，优化文字稿：补全标点、理顺语句、让表达更通顺自然，可按语义用空行分段。只输出润色后的文本，不要解释或前缀。',
-    '/title':'你是自媒体选题助手。根据口述/草稿，生成一个吸睛且准确的短标题（不超过18字，不要书名号、引号或任何前缀），并给出3到5个中文标签（每个2-6字）。只输出一个 JSON 对象：{"title":"...","tags":["...","..."]}，不要任何解释或前后缀。'
+  _dsPrompt:function(route,acct){
+    var base={
+      '/punctuate':'你是中文口述稿整理助手。任务：给文本添加合适的标点符号（，。？！、：）并按语义用空行分段。严格保留原文用字，绝不增删改任何字词，不添加解释或前缀，只输出整理后的文本。',
+      '/polish':'你是中文笔记润色助手。在不改变原意、不增删事实的前提下，优化文字稿：补全标点、理顺语句、让表达更通顺自然，可按语义用空行分段。只输出润色后的文本，不要解释或前缀。',
+      '/title':'你是自媒体选题助手。根据口述/草稿，生成一个吸睛且准确的短标题（不超过18字，不要书名号、引号或任何前缀），并给出3到5个中文标签（每个2-6字）。只输出一个 JSON 对象：{"title":"...","tags":["...","..."]}，不要任何解释或前后缀。',
+      '/adapt':'你是多平台内容适配助手。把下面这篇草稿改写成适合指定平台发布的成稿：保留核心信息与个人真实视角，按该平台的语气风格重写正文，并配一个该平台风格的标题（不超过18字，无书名号/引号/前缀）。只输出一个 JSON 对象：{"title":"...","body":"..."}，不要任何解释或前后缀。'
+    }[route]||'';
+    if(acct&&(route==='/polish'||route==='/title'||route==='/adapt')){
+      var info='目标平台：'+(acct.platform||acct.name)+'；平台调性：'+(acct.tone||'无特别要求');
+      if(route==='/adapt'){
+        base+='\n\n'+info+'\n请严格按上述平台调性改写正文与拟定标题。';
+      }else{
+        base+='\n\n（若内容已关联发布平台，请尽量贴合其调性：'+info+'）';
+      }
+    }
+    return base;
   },
   _useDirect:function(){
     return (Data.settings.aiMode||'direct')==='direct'&&!!(Data.settings.dsKey||'').trim();
   },
+  _aiAcct:function(){var c=Data.curAccountId();return c?Data.accountById(c):null;},
   aiReady:function(){
     if((Data.settings.aiMode||'direct')==='direct')return !!(Data.settings.dsKey||'').trim();
     return !!this._punctBase();
@@ -1986,7 +2006,7 @@ var Rec={
     toast('Key 已保存到本机');
     cb();
   },
-  _dsTemp:function(route){return route==='/title'?0.6:(route==='/polish'?0.4:0);},
+  _dsTemp:function(route){return route==='/adapt'?0.7:(route==='/title'?0.6:(route==='/polish'?0.4:0));},
   _parseJSONSafe:function(s){
     if(!s)return {};
     s=String(s).trim().replace(/^```(?:json)?/i,'').replace(/```$/i,'').trim();
@@ -1996,15 +2016,15 @@ var Rec={
     return {};
   },
   /* 浏览器直连 api.deepseek.com（国内可直连，且该域名允许跨域） */
-  _dsDirect:function(route,payload,ok,fail){
+  _dsDirect:function(route,payload,ok,fail,acct){
     var key=(Data.settings.dsKey||'').trim();
-    var sys=this._dsPrompts[route]||'';
+    var sys=this._dsPrompt(route, acct);
     var settled=false;
     var ac=(typeof AbortController!=='undefined')?new AbortController():null;
     var to=setTimeout(function(){if(!settled){settled=true;ac&&ac.abort();fail&&fail(new Error('请求超时（DeepSeek 未响应）'));}},30000);
     fetch('https://api.deepseek.com/chat/completions',{method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model:'deepseek-chat',temperature:this._dsTemp(route),max_tokens:2000,
+      body:JSON.stringify({model:'deepseek-chat',temperature:this._dsTemp(route),max_tokens:(route==='/adapt'?3500:2000),
         messages:[{role:'system',content:sys},{role:'user',content:String((payload&&payload.text)||'').slice(0,8000)}]}),
       signal:ac?ac.signal:undefined})
       .then(function(r){return r.text().then(function(raw){
@@ -2020,6 +2040,9 @@ var Rec={
           var p=Rec._parseJSONSafe(c);
           ok&&ok({title:String(p.title||'').trim().slice(0,30),
                   tags:(Array.isArray(p.tags)?p.tags:[]).map(String).filter(Boolean).slice(0,5)});
+        }else if(route==='/adapt'){
+          var p2=Rec._parseJSONSafe(c);
+          ok&&ok({title:String(p2.title||'').trim().slice(0,30),body:String(p2.body||'').trim()});
         }else if(c){ok&&ok({text:c});}
         else fail&&fail(new Error('未返回内容'));
       })
@@ -2070,7 +2093,7 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('先写点内容，才能生成标题');return;}
-    var self=this;
+    var self=this,acct=self._aiAcct();
     this._ensureKey(function(){
       var btn=document.getElementById('aiTitleBtn');
       if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>生成中…';}
@@ -2090,7 +2113,7 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    var self=this;
+    var self=this,acct=self._aiAcct();
     this._ensureKey(function(){
       var btn=document.getElementById('aiPolishBtn');
       if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>润色中…';}
@@ -2105,13 +2128,15 @@ var Rec={
       },function(){toast('AI 润色失败，保持原文');restore();});
     });
   },
-  _aiRequest:function(route,payload,ok,fail){
-    if(this._useDirect()){this._dsDirect(route,payload,ok,fail);return;}
+  _aiRequest:function(route,payload,ok,fail,acct){
+    if(this._useDirect()){this._dsDirect(route,payload,ok,fail,acct);return;}
     var base=this._punctBase();
     if(!base){fail&&fail(new Error(this._aiNeedMsg()));return;}
+    var payload2=payload;
+    if(acct){payload2=Object.assign({},payload,{platform:acct.platform||acct.name,tone:acct.tone||''});}
     var settled=false;
     var to=setTimeout(function(){if(!settled){settled=true;fail&&fail(new Error('请求超时'));}},20000);
-    fetch(base+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    fetch(base+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload2)})
       .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json().catch(function(){return {};});})
       .then(function(j){if(settled)return;settled=true;clearTimeout(to);ok&&ok(j);})
       .catch(function(e){if(settled)return;settled=true;clearTimeout(to);fail&&fail(e);});
@@ -2295,7 +2320,7 @@ var Rec={
             if(j&&j.title)self.draft.title=j.title;
             if(j&&Array.isArray(j.tags))j.tags.forEach(function(tg){if((self.draft.tags||[]).indexOf(tg)<0)self.draft.tags.push(tg);});
             finish();
-          },finish);
+          },finish,self._aiAcct());
         }else finish();
       },function(){
         if(sb){sb.disabled=false;sb.textContent='完成';}
@@ -2409,6 +2434,7 @@ var Render={
         '<span>'+when+'</span>'+
         (n.hasAudio?'<span class="tag"><svg><use href="#i-audio"/></svg>录音</span>':'')+
         (n.imgCount?'<span class="tag"><svg><use href="#i-img"/></svg>'+n.imgCount+'</span>':'')+
+        (n.versions&&Object.keys(n.versions).length?'<span class="tag"><svg><use href="#i-note"/></svg>稿'+Object.keys(n.versions).length+'</span>':'')+
         '<span>'+n.words+' 字</span>'+
       '</div>'+ tags +'</div></div>';
   },
@@ -3029,7 +3055,7 @@ var Detail={
   clearTitle:function(){var t=$('#dtTitleIn');if(t){t.value='';t.focus();}this.onTitleInput();},
   /* AI 优化标题：走 DeepSeek（/title），带本地兜底 */
   optimizeTitle:function(){
-    var self=this;
+    var self=this,acct=self._aiAcct();
     var cur=$('#dtTitleIn').value.trim();
     var txt=($('#dtText').value||'').trim();
     var src=txt||cur;
@@ -3055,7 +3081,7 @@ var Detail={
         }
         h+='<div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">取消</button></div>';
         $('#dlg').innerHTML=h;$('#mask').classList.add('on');
-      },function(e){toast('AI 标题失败：'+(e&&e.message||'请检查网络或 Key'));});
+      },function(e){toast('AI 标题失败：'+(e&&e.message||'请检查网络或 Key'));}, acct);
     });
   },
   addAITag:function(i){
@@ -3070,7 +3096,7 @@ var Detail={
     var n=this.cur;if(!n)return;
     var txt=($('#dtText').value||'').trim();
     if(!txt){toast('没有可润色的文字');return;}
-    var self=this,btn=$('#dtPolishBtn');
+    var self=this,acct=self._aiAcct(),btn=$('#dtPolishBtn');
     var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 润色';}};
     Rec._ensureKey(function(){
       if(btn){btn.disabled=true;btn.textContent='润色中…';}
@@ -3082,7 +3108,7 @@ var Detail={
         $('#dtText').value=t;self.autoGrow();self.markDirty();
         self.toggleOrig();
         toast('已 AI 润色，可查看原版');
-      },function(e){restore();toast('AI 润色失败：'+(e&&e.message||'请检查网络或 Key'));});
+      },function(e){restore();toast('AI 润色失败：'+(e&&e.message||'请检查网络或 Key'));}, acct);
     });
   },
   toggleOrig:function(){var b=$('#dtOrigBtn');if(b)b.style.display=this._orig?'flex':'none';},
@@ -3137,6 +3163,8 @@ var Detail={
     this.toggleOrig();
     this.paintTags();
     this.paintAccounts();
+    this.paintAiAcct();
+    this.paintVersions();
     this.paintAudio();
     this.paintImgs();
     $$('#dtStatus button').forEach(function(b){b.classList.toggle('on',b.dataset.s===n.status);});
@@ -3169,7 +3197,96 @@ var Detail={
       var i=n.accounts.indexOf(id);
       if(i>=0)n.accounts.splice(i,1);else n.accounts.push(id);
     }
-    this.dirty=true;this.paintAccounts();
+    this.dirty=true;this.paintAccounts();this.paintAiAcct();this.paintVersions();
+  },
+  _aiAcct:function(){
+    var n=this.cur;if(!n)return null;
+    var ids=n.accounts||[];
+    if(ids.length){var a=Data.accountById(ids[0]);if(a)return a;}
+    var c=Data.curAccountId();if(c){var b=Data.accountById(c);if(b)return b;}
+    return null;
+  },
+  paintAiAcct:function(){
+    var el=$('#dtAiAcct');if(!el)return;
+    var a=this._aiAcct();
+    el.textContent=a?('AI 将按「'+(a.platform||a.name)+'」调性生成标题与润色'):'未关联账号，AI 按通用风格生成';
+  },
+  /* 多平台草稿：一条灵感 → 各平台适配稿（存 note.versions[accountId]） */
+  paintVersions:function(){
+    var box=$('#dtVersions');if(!box)return;
+    var n=this.cur;if(!n){box.innerHTML='';return;}
+    n.versions=n.versions||{};
+    var ids=(n.accounts||[]).filter(function(id){return id;});
+    if(!ids.length){box.innerHTML='<div class="muted" style="font-size:12px;color:var(--text2)">勾选上方账号后，可一键为各平台生成适配草稿。</div>';return;}
+    var self=this;
+    var h='<button class="btn btn-s btn-p" style="width:100%;margin-bottom:10px" onclick="Detail.genAllVersions()"><svg><use href="#i-wand"/></svg>一键生成全部平台草稿</button>';
+    ids.forEach(function(id){
+      var a=Data.accountById(id);if(!a)return;
+      var v=n.versions[id]||{};
+      var col=a.color||'#2E7D32';
+      h+='<div class="ver" style="border-left:3px solid '+col+'">';
+      h+='<div class="ver-h"><span class="adot" style="background:'+col+'"></span><b>'+esc(a.platform||a.name)+'</b>'+
+         '<button class="btn btn-s btn-o" style="margin-left:auto" onclick="Detail.genVersion(\''+id+'\')"><svg><use href="#i-wand"/></svg>生成</button></div>';
+      if(v&&v.body){
+        h+='<input class="ver-t" id="verTitle_'+id+'" value="'+esc(v.title||'')+'" placeholder="标题">';
+        h+='<textarea class="ver-b" id="verBody_'+id+'" placeholder="正文（可手动润色）">'+esc(v.body||'')+'</textarea>';
+        h+='<div class="ver-acts"><button class="btn btn-s" onclick="Detail.saveVersion(\''+id+'\')">保存</button>'+
+           '<button class="btn btn-s btn-o" onclick="Detail.copyVersion(\''+id+'\')">复制</button></div>';
+        if(v.updated)h+='<div class="muted" style="font-size:11px;color:var(--text3);margin-top:4px">更新于 '+new Date(v.updated).toLocaleString('zh-CN')+'</div>';
+      }else{
+        h+='<div class="muted" style="font-size:12px;color:var(--text2)">尚未生成，点「生成」按该平台调性改写。</div>';
+      }
+      h+='</div>';
+    });
+    box.innerHTML=h;
+  },
+  genVersion:function(acctId,done){
+    var n=this.cur;if(!n)return;
+    var a=Data.accountById(acctId);if(!a){toast('账号不存在');done&&done();return;}
+    if(!Rec._useDirect()){toast('多平台草稿需直连 DeepSeek（设置里填 Key 并选「直连」）');done&&done();return;}
+    var txt=($('#dtText').value||n.text||'').trim();
+    if(!txt){toast('先写点文字稿再生成平台草稿');done&&done();return;}
+    var self=this;
+    Rec._ensureKey(function(){
+      Rec._dsDirect('/adapt',{text:txt},function(j){
+        n.versions=n.versions||{};
+        n.versions[acctId]={title:String(j.title||'').trim(),body:String(j.body||'').trim(),tone:a.tone||'',updated:Date.now()};
+        self.dirty=true;self.paintVersions();Data.saveNotes();
+        toast('已生成「'+(a.platform||a.name)+'」草稿');done&&done();
+      },function(e){toast('生成失败：'+(e&&e.message||'请检查网络或 Key'));self.paintVersions();done&&done();},a);
+    });
+  },
+  genAllVersions:function(){
+    var n=this.cur;if(!n)return;
+    var ids=(n.accounts||[]).filter(function(id){return id;});
+    if(!ids.length){toast('先在「发布到账号」里勾选平台');return;}
+    var self=this,k=0;
+    var step=function(){
+      if(k>=ids.length){toast('已生成全部平台草稿（'+ids.length+' 个）');return;}
+      var id=ids[k++];
+      self.genVersion(id,function(){setTimeout(step,800);});
+    };
+    step();
+  },
+  saveVersion:function(acctId){
+    var n=this.cur;if(!n)return;
+    n.versions=n.versions||{};
+    var v=n.versions[acctId];if(!v)v=n.versions[acctId]={title:'',body:'',tone:'',updated:Date.now()};
+    v.title=($('#verTitle_'+acctId).value||'').trim();
+    v.body=($('#verBody_'+acctId).value||'');
+    v.updated=Date.now();
+    this.dirty=true;Data.saveNotes();
+    toast('已保存「'+(Data.accountById(acctId)||{name:'账号'}).name+'」草稿');
+  },
+  copyVersion:function(acctId){
+    var n=this.cur;if(!n||!n.versions)return;
+    var v=n.versions[acctId];if(!v){toast('还没有草稿');return;}
+    var txt=(v.title?('# '+v.title+'\n\n'):'')+v.body;
+    var done=function(){toast('已复制草稿到剪贴板');};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt);});
+    }else fallbackCopy(txt);
+    function fallbackCopy(s){try{var ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();}catch(e){toast('复制失败');}}
   },
   paintAudio:function(){
     var n=this.cur,box=$('#dtAudio');
