@@ -313,6 +313,7 @@ html[data-theme="dark"] .hcell.l4{background:var(--green);color:#12200F}
 .graph-legend .gl-line{width:20px;height:0;border-top:2px solid var(--green)}
 .graph-legend .gl-line.dash{border-top-style:dashed}
 .graph-legend .gl-line.dot{border-top-style:dotted}
+.gnode-cross circle,.gnode-cross rect{stroke:#C8762E!important;stroke-width:2!important;stroke-dasharray:4 2}
 .graph-preview{width:70px;height:50px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card2);flex:none}
 .graph-preview svg{width:100%;height:100%}
 /* 图谱节点样式（SVG内） */
@@ -442,6 +443,13 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 .forest-header h1{font-size:28px;font-weight:800;color:var(--green);letter-spacing:2px}
 .forest-header p{font-size:13px;color:var(--text2);margin-top:6px;letter-spacing:.5px}
 .forest-stats{position:relative;z-index:2;margin:16px 16px 0;background:var(--card);border-radius:18px;padding:16px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;box-shadow:0 2px 14px rgba(46,125,50,.08)}
+.ft-row{display:flex;gap:10px;justify-content:center;align-items:flex-end;flex-wrap:wrap;padding:6px 4px 10px}
+.ftree{display:flex;flex-direction:column;align-items:center;cursor:pointer;opacity:.82;transition:transform .15s,opacity .15s;width:64px}
+.ftree.on{opacity:1;transform:translateY(-3px)}
+.ftree.on svg{filter:drop-shadow(0 3px 7px rgba(46,125,50,.28))}
+.ft-empty{opacity:.32}
+.ft-name{font-size:11px;color:var(--text2);margin-top:5px;white-space:nowrap;max-width:64px;overflow:hidden;text-overflow:ellipsis}
+.ft-num{font-size:10.5px;color:var(--green);font-weight:600;margin-top:1px}
 .fs-item{text-align:center}
 .fs-num{font-size:22px;font-weight:800;color:var(--text);line-height:1.2;font-variant-numeric:tabular-nums}
 .fs-label{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500}
@@ -683,6 +691,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <button data-pf="抖音" onclick="Leaf.setPf('抖音')">抖音</button>
         <button data-pf="视频号" onclick="Leaf.setPf('视频号')">视频号</button>
       </div>
+      <div class="seg" id="leafAcctSeg" style="margin-bottom:10px"></div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-o" style="flex:1" onclick="Leaf.openSearch()"><svg><use href="#i-link"/></svg>去<span id="leafPfName">小红书</span>搜</button>
         <button id="btnAppOpen" class="btn btn-p hidden" style="flex:1" onclick="Leaf.openInApp()"><svg><use href="#i-phone"/></svg>在<span id="leafAppName">抖音</span>打开</button>
@@ -708,6 +717,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     <div class="sec-t"><h2><svg><use href="#i-branch"/></svg>知识图谱</h2><span id="graphInfo"></span></div>
     <div class="card" style="padding:12px;overflow:hidden">
       <div class="graph-tip"><svg><use href="#i-branch"/></svg><span>基于标签与内容的智能关联，让灵感之间产生连接，形成知识网络</span></div>
+      <div class="seg" id="graphAcctSeg" style="margin-bottom:10px"></div>
       <div class="graph-toolbar" id="graphToolbar">
         <button class="gtb-btn" onclick="Graph.zoomIn()" title="放大"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-search"/></svg>缩放</button>
         <button class="gtb-btn" onclick="Graph.toggleFilter()" title="筛选"><svg style="width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2"><use href="#i-funnel"/></svg>筛选</button>
@@ -792,14 +802,16 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     </div>
     <div class="forest-header">
       <h1>知识森林</h1>
-      <p>你的知识图谱概览</p>
+      <p>每个账号长成一棵树，越高代表产出越多</p>
     </div>
+    <div class="acct-sw" id="forestAcctSw" style="position:relative;z-index:2;justify-content:center;margin:12px 16px 0"></div>
     <div class="forest-stats">
       <div class="fs-item"><div class="fs-num" id="fsIdea">0</div><div class="fs-label">灵感</div></div>
       <div class="fs-item"><div class="fs-num" id="fsTip">0</div><div class="fs-label">枝端</div></div>
       <div class="fs-item"><div class="fs-num" id="fsLink">0</div><div class="fs-label">关联</div></div>
-      <div class="fs-item"><div class="fs-num" id="fsRead">0</div><div class="fs-label">阅读</div></div>
+      <div class="fs-item"><div class="fs-num" id="fsRead">0</div><div class="fs-label">字数</div></div>
     </div>
+    <div id="forestTrees" style="position:relative;z-index:2;margin:14px 12px 0"></div>
   </section>
 
   <!-- ============ 设置 ============ -->
@@ -905,7 +917,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.37</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.38</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1582,8 +1594,22 @@ var Nav={
 
 /* ================= 森林 ================= */
 var Forest={
+  _acct:'all',
+  /* 当前账号视图下的灵感集合 */
+  _notes:function(){
+    var acct=this._acct||'all';
+    var ns=(Data.notes||[]).filter(function(n){return !n.seed;});
+    if(acct!=='all'){
+      ns=ns.filter(function(n){
+        var aa=n.accounts||[];
+        if(acct==='none')return aa.length===0;
+        return aa.indexOf(acct)>=0;
+      });
+    }
+    return ns;
+  },
   render:function(){
-    var notes=Data.notes||[];
+    var notes=this._notes();
     var kw={}, pair={};
     notes.forEach(function(n){
       var ks=extractKeywords((n.title||'')+' '+(n.text||''),60);
@@ -1596,11 +1622,53 @@ var Forest={
     });
     var keys=Object.keys(kw), links=0;
     for(var k in pair)if(pair[k]>=2)links++;
+    var words=notes.reduce(function(s,n){return s+(n.words||0);},0);
     $('#fsIdea').textContent=notes.length;
     $('#fsTip').textContent=keys.length;
     $('#fsLink').textContent=links;
-    $('#fsRead').textContent=0;
-  }
+    $('#fsRead').textContent=words;
+    this.paintSw();
+    this.paintTrees();
+  },
+  /* 账号切换条 */
+  paintSw:function(){
+    var box=document.getElementById('forestAcctSw'); if(!box)return;
+    var self=this; if(this._acct===undefined)this._acct='all';
+    var h='<button class="'+(this._acct==='all'?'on':'')+'" onclick="Forest.setAcct(\'all\')">全部账号</button>';
+    Data.accounts.forEach(function(a){ if(!a.active)return;
+      h+='<button class="'+(self._acct===a.id?'on':'')+'" onclick="Forest.setAcct(\''+a.id+'\')"><span class="adot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:4px;vertical-align:middle"></span>'+esc(a.name)+'</button>';
+    });
+    h+='<button class="'+(this._acct==='none'?'on':'')+'" onclick="Forest.setAcct(\'none\')">未分配</button>';
+    box.innerHTML=h;
+  },
+  /* 每账号一棵树：高度按该账号灵感条数缩放 */
+  paintTrees:function(){
+    var box=document.getElementById('forestTrees'); if(!box)return;
+    var accts=Data.accounts.filter(function(a){return a.active;});
+    if(!accts.length){box.innerHTML='';return;}
+    var data=accts.map(function(a){
+      var ns=(Data.notes||[]).filter(function(n){return !n.seed && (n.accounts||[]).indexOf(a.id)>=0;});
+      return {a:a,count:ns.length,words:ns.reduce(function(s,n){return s+(n.words||0);},0)};
+    });
+    var max=Math.max(1,Math.max.apply(null,data.map(function(d){return d.count;})));
+    var cur=this._acct||'all';
+    var h='<div class="ft-row">';
+    data.forEach(function(d){
+      var ratio=max?d.count/max:0;
+      var th=Math.round(30+ratio*86);                 // 树高 30~116，越高产出越多
+      var on=(cur===d.a.id)?' on':'';
+      h+='<div class="ftree'+(d.count?'':' ft-empty')+on+'" onclick="Forest.setAcct(\''+d.a.id+'\')" title="'+esc(d.a.name)+'：'+d.count+' 条 · '+d.words+' 字">'+
+        '<svg viewBox="0 0 64 132" width="58" height="120">'+
+        '<rect x="29" y="'+(132-th)+'" width="6" height="'+th+'" rx="3" fill="#8D6E63"/>'+
+        '<ellipse cx="32" cy="'+(132-th-12)+'" rx="'+(13+ratio*15).toFixed(1)+'" ry="'+(17+ratio*19).toFixed(1)+'" fill="'+d.a.color+'" opacity=".85"/>'+
+        '</svg>'+
+        '<div class="ft-name">'+esc(d.a.name)+'</div>'+
+        '<div class="ft-num">'+d.count+' 条</div></div>';
+    });
+    h+='</div>';
+    box.innerHTML=h;
+  },
+  setAcct:function(id){this._acct=id;this.render();}
 };
 
 /* ================= 录音识别 ================= */
@@ -2588,16 +2656,25 @@ var Heat={
 
 /* ================= 绿叶 ================= */
 var Leaf={
-  pf:'all',
+  pf:'all', _acct:'all',
   render:function(){
+    this.paintAcct();
     var box=$('#wfBox');
-    var list=Data.cards.filter(function(c){return Leaf.pf==='all'||c.platform===Leaf.pf;});
+    var list=Data.cards.filter(function(c){
+      if(Leaf.pf!=='all'&&c.platform!==Leaf.pf)return false;
+      var ac=Leaf._acct||'all';
+      var ca=c.account||'';
+      if(ac==='all')return true;
+      if(ac==='none')return !ca;
+      return ca===ac;
+    });
     $('#cardCount').textContent=list.length+' 条';
     if(!list.length){
-      box.innerHTML='<div class="card empty" style="grid-column:1/-1"><svg><use href="#i-leaf"/></svg><div>这里还没有'+(Leaf.pf==='all'?'素材':'「'+Leaf.pf+'」素材')+'<br>去对应平台搜一搜，粘贴回来</div></div>';return;
+      box.innerHTML='<div class="card empty" style="grid-column:1/-1"><svg><use href="#i-leaf"/></svg><div>这里还没有'+(Leaf.pf==='all'?'素材':'「'+Leaf.pf+'」素材')+(Leaf._acct&&Leaf._acct!=='all'?'（该账号下）':'')+'<br>去对应平台搜一搜，粘贴回来</div></div>';return;
     }
     var h='';
     list.forEach(function(c){
+      var acctTag=(c.account&&Data.acctName(c.account))?'<span class="muted" style="font-size:10.5px;margin-left:2px">· '+esc(Data.acctName(c.account))+'</span>':'';
       var hgt=[110,142,96,126,150,108][c.title.length%6];
       var type=c.type||'图文';
       var cover=c.cover?'<img src="'+esc(c.cover)+'" alt="" onerror="this.style.display=\'none\'">':
@@ -2609,7 +2686,7 @@ var Leaf={
           (c.hot?'<span class="hot"><svg class="ico" style="width:9px;height:9px"><use href="#i-fire"/></svg>'+esc(c.hot)+'</span>':'')+
         '</div>'+
         '<div class="wbody"><h4>'+esc(c.title)+'</h4>'+
-        '<div class="au"><em>'+esc(c.author||'未知作者')+'</em>'+
+        '<div class="au"><em>'+esc(c.author||'未知作者')+'</em>'+acctTag+
         '<button class="del" onclick="event.stopPropagation();Leaf.del(\''+c.id+'\')"><svg><use href="#i-x"/></svg></button></div></div></div>';
       h+=wcard;
     });
@@ -2640,6 +2717,18 @@ var Leaf={
     if(ba){ba.classList.remove('hidden');$('#leafAppName').textContent=label;}
     this.render();
   },
+  /* 账号筛选条（与平台筛选叠加生效） */
+  paintAcct:function(){
+    var box=document.getElementById('leafAcctSeg'); if(!box)return;
+    var self=this; if(this._acct===undefined)this._acct='all';
+    var h='<button class="'+(this._acct==='all'?'on':'')+'" onclick="Leaf.setAcct(\'all\')">全部账号</button>';
+    Data.accounts.forEach(function(a){ if(!a.active)return;
+      h+='<button class="'+(self._acct===a.id?'on':'')+'" onclick="Leaf.setAcct(\''+a.id+'\')"><span class="adot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:4px;vertical-align:middle"></span>'+esc(a.name)+'</button>';
+    });
+    h+='<button class="'+(this._acct==='none'?'on':'')+'" onclick="Leaf.setAcct(\'none\')">未分配</button>';
+    box.innerHTML=h;
+  },
+  setAcct:function(id){this._acct=id;this.paintAcct();this.render();},
   kwChips:function(){
     var freq={};
     Data.notes.forEach(function(n){(n.tags||[]).forEach(function(t){freq[t]=(freq[t]||0)+1;});});
@@ -2707,8 +2796,8 @@ var Leaf={
       if(!videoFile&&/\.(?:mp4|webm|m3u8)(?:[?#]|$)/i.test(u))videoFile=u;
     });
     var type=(videoFile||plat==='抖音'||plat==='视频号'||plat==='B站')?'视频':'图文';
-    var card={id:uid(),title:title.slice(0,40)||'未命名素材',author:author||'未识别到作者',
-      url:urlM?urlM[0]:'',platform:plat,hot:hot||'',type:type,
+      var card={id:uid(),title:title.slice(0,40)||'未命名素材',author:author||'未识别到作者',
+      url:urlM?urlM[0]:'',platform:plat,account:Data.curAccountId()||'',hot:hot||'',type:type,
       cover:imgUrl||'',videoFile:videoFile||'',
       color:['#8FAF9A','#C9A88C','#9BADCB','#CBA3B0','#A8BFA0','#C4B39A'][Math.floor(Math.random()*6)],
       color2:['#5E8C6C','#A87B58','#6F87AD','#A87288','#7C9A72','#9A8763'][Math.floor(Math.random()*6)],
@@ -2745,17 +2834,27 @@ var Leaf={
 
 /* ================= 枝条图谱（放射状思维导图） ================= */
 var Graph={
-  freq:{}, co:{}, noteIds:{}, sel:null, zoom:1, nodes:[], edgeList:[],
+  freq:{}, co:{}, noteIds:{}, accts:{}, _acct:'all', sel:null, zoom:1, nodes:[], edgeList:[],
   /* 计算词频和共现：只采集【真实灵感】的标签 */
   build:function(){
-    this.freq={}; this.co={}; this.noteIds={};
+    this.freq={}; this.co={}; this.noteIds={}; this.accts={};
     // 排除示例(seed)数据——图谱只反映用户自己的真实标签，而非固定演示
+    var acct=this._acct||'all';
     var notes=Data.notes.filter(function(n){return !n.seed;});
+    if(acct!=='all'){ // 按账号过滤：只看该账号(或"未分配")的灵感网络
+      notes=notes.filter(function(n){
+        var aa=n.accounts||[];
+        if(acct==='none')return aa.length===0;
+        return aa.indexOf(acct)>=0;
+      });
+    }
     notes.forEach(function(n){
       var arr=(n.tags||[]).filter(function(t){return t;});
       arr.forEach(function(t){
         Graph.freq[t]=(Graph.freq[t]||0)+1;            // 词频 = 打过该标签的灵感条数
         (Graph.noteIds[t]=Graph.noteIds[t]||[]).push(n.id);
+        Graph.accts[t]=Graph.accts[t]||{};             // 记录该标签覆盖的账号集合
+        (n.accounts||[]).forEach(function(id){Graph.accts[t][id]=1;});
       });
       for(var i=0;i<arr.length;i++)for(var j=i+1;j<arr.length;j++){
         var k=arr[i]<arr[j]?arr[i]+'|'+arr[j]:arr[j]+'|'+arr[i];
@@ -2763,6 +2862,18 @@ var Graph={
       }
     });
   },
+  /* 账号筛选条（与树干同一套交互：全部 / 各账号 / 未分配） */
+  paintAcct:function(){
+    var box=document.getElementById('graphAcctSeg'); if(!box)return;
+    var self=this; if(this._acct===undefined)this._acct='all';
+    var h='<button class="'+(this._acct==='all'?'on':'')+'" onclick="Graph.setAcct(\'all\')">全部</button>';
+    Data.accounts.forEach(function(a){ if(!a.active)return;
+      h+='<button class="'+(self._acct===a.id?'on':'')+'" onclick="Graph.setAcct(\''+a.id+'\')"><span class="adot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:4px;vertical-align:middle"></span>'+esc(a.name)+'</button>';
+    });
+    h+='<button class="'+(this._acct==='none'?'on':'')+'" onclick="Graph.setAcct(\'none\')">未分配</button>';
+    box.innerHTML=h;
+  },
+  setAcct:function(id){this._acct=id;this.paintAcct();this.draw();},
   related:function(kw){
     var out={};
     Object.keys(this.co).forEach(function(k){
@@ -2901,6 +3012,7 @@ var Graph={
   },
   draw:function(){
     this.build();
+    this.paintAcct();
     var ks=Object.keys(this.freq);
     $('#graphInfo').textContent=ks.length+' 个关键词';
     var svg=$('#graph');
@@ -2953,10 +3065,11 @@ var Graph={
       var nd=this.nodes[i];
       var selCls=(this.sel===nd.id)?' sel':'';
       var dimCls=(this.sel && !connSet[nd.id])?' dim':'';
+      var crossCls=(this.accts[nd.id]&&Object.keys(this.accts[nd.id]).length>=2)?' g-cross':'';
       var fill=nd.fill||'var(--green)';
       var tClr=nd.tColor||'#fff';
       if(nd.type==='center'){
-        h+='<g class="gnode-center'+selCls+dimCls+'" onclick="event.stopPropagation();Graph.select(\''+nd.id+'\')">'+
+        h+='<g class="gnode-center'+selCls+dimCls+crossCls+'" onclick="event.stopPropagation();Graph.select(\''+nd.id+'\')">'+
           '<circle cx="'+nd.x+'" cy="'+nd.y+'" r="'+nd.r+'" fill="'+fill+'"/>'+
           '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text>'+
           (nd.count>1?'<text class="gcount" x="'+(nd.x+nd.r*.55)+'" y="'+(nd.y-nd.r*.35)+'">'+nd.count+'</text>':'')+
@@ -2966,7 +3079,7 @@ var Graph={
         rw=Math.max(rw, nd.r*1.6);
         var rx=nd.x-rw/2, ry=nd.y-rh/2;
         var clsName=nd.type==='primary'?'gnode-primary':'gnode-secondary';
-        h+='<g class="'+clsName+selCls+dimCls+'" onclick="event.stopPropagation();Graph.select(\''+nd.id+'\')">'+
+        h+='<g class="'+clsName+selCls+dimCls+crossCls+'" onclick="event.stopPropagation();Graph.select(\''+nd.id+'\')">'+
           '<rect x="'+rx+'" y="'+ry+'" width="'+rw+'" height="'+rh+'" rx="'+(rh/2)+'" fill="'+fill+'" stroke="var(--green)" stroke-width="'+(nd.type==='primary'?1:.7)+'"/>'+
           '<text x="'+nd.x+'" y="'+nd.y+'" fill="'+tClr+'">'+esc(nd.label)+'</text>'+
           (nd.type==='primary'&&nd.count>1?'<text class="gcount" x="'+(nd.x+rw/2-4)+'" y="'+(ry+rh-5)+'">'+nd.count+'</text>':'')+
@@ -2981,7 +3094,8 @@ var Graph={
       '<span class="gl-item"><span class="gl-line"></span>强关联</span>'+
       '<span class="gl-item"><span class="gl-line dash"></span>中关联</span>'+
       '<span class="gl-item"><span class="gl-line dot"></span>弱关联</span>'+
-      '<span class="gl-item"><span class="gl-line" style="border-top-style:dashed;opacity:.25"></span>跨关联</span>';
+      '<span class="gl-item"><span class="gl-line" style="border-top-style:dashed;opacity:.25"></span>跨关联</span>'+
+      '<span class="gl-item"><span class="gl-line" style="border-top:2px dashed #C8762E"></span>跨账号·可复用</span>';
   },
   renderPreview:function(){
     // 复制当前 SVG 的缩小版作为预览
@@ -3007,7 +3121,11 @@ var Graph={
     var relKs=Object.keys(rel).sort(function(a,b){return rel[b]-rel[a];}).slice(0,10);
     var ids=this.noteIds[kw]||[];
     var list=Data.notes.filter(function(n){return ids.indexOf(n.id)>=0 && !n.seed;});
+    var ac=this.accts[kw]?Object.keys(this.accts[kw]).length:0;
     var h='<div class="sec-t"><h2><svg><use href="#i-eye"/></svg>「'+esc(kw)+'」相关</h2><span>'+list.length+' 条</span></div>';
+    if(ac>=2){
+      h+='<div class="card" style="padding:10px 12px;margin-bottom:10px"><div class="fl" style="color:var(--brown);font-size:12.5px">跨 '+ac+' 个账号的选题 · 可复用灵感</div></div>';
+    }
     if(relKs.length){
       h+='<div class="card" style="padding:12px 12px 10px"><div class="fl" style="margin-bottom:7px;color:var(--text2);font-size:12.5px">常一起出现的词</div>'+
         '<div class="kw-rel">'+relKs.map(function(k){return '<span class="kw-rel-i" data-kw="'+esc(k)+'" onclick="Graph.selectKw(this)">'+esc(k)+'</span>';}).join('')+'</div></div>';
