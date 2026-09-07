@@ -102,6 +102,11 @@ label.fl{display:block;font-size:12px;color:var(--text2);margin:0 0 6px 3px;font
 /* chips */
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;background:var(--green-l);color:var(--green);font-weight:500}
+.adot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;flex:none}
+.acct-sw{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px}
+.acct-pill{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+.acct-pill.on{background:var(--green);color:#fff}
+.acct-pill.on .adot{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
 .chip.b{background:var(--brown-l);color:var(--brown)}
 .chip.x{cursor:pointer}
 .chip.g{background:var(--card2);color:var(--text2);border:1px dashed var(--line)}
@@ -582,6 +587,10 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       </div>
     </div>
 
+    <!-- 当前账号切换器 -->
+    <div class="sec-t"><h2><svg><use href="#i-me"/></svg>当前账号</h2></div>
+    <div class="acct-sw" id="acctSwitcher"></div>
+
     <!-- 今日待办（单列） -->
     <div class="today today-full" id="todayBox" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
 
@@ -595,6 +604,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
         <button class="qc-btn qc-btn-ghost" onclick="Rec.tab('text');$('#pane-text').classList.remove('hidden');$('#pane-voice').classList.add('hidden');document.getElementById('directText').focus()"><svg><use href="#i-plus"/></svg>输入灵感</button>
       </div>
       <div class="qc-tip">进入灵想集的第一件事，就是留下此刻的灵感</div>
+      <span id="recAccountHint" class="qc-tip"></span>
       <!-- 隐藏的原有面板（录音中/结果） -->
       <div id="pane-voice" class="hidden">
         <div class="rec-time" id="recTime">00:00</div>
@@ -644,6 +654,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <button data-f="写作中" onclick="Render.memoFull('写作中')">写作中</button>
       <button data-f="已发布" onclick="Render.memoFull('已发布')">已发布</button>
     </div>
+    <div class="tabs" id="acctFilter" style="margin-bottom:12px"></div>
     <div id="memoListFull" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP"></div>
   </section>
 
@@ -856,6 +867,12 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <div class="tip" style="margin-top:10px">浏览器内置：零配置，边录边出字，推荐国内使用（请用 Safari / Chrome 打开，微信内置浏览器不支持）。Whisper 代理：用 OpenAI 转写更准，但代理地址在国内可能无法访问，需自行更换可达的代理。AI 标点 / AI 标题 / AI 润色默认直连 DeepSeek（国内可访问），也可切换为走自建代理。</div>
     </div>
 
+    <div class="sec-t"><h2><svg><use href="#i-me"/></svg>账号管理</h2><span id="acctManageAdd" style="cursor:pointer;color:var(--green);font-size:12px" onclick="Me.acctDlg('')">+ 新增</span></div>
+    <div class="card">
+      <div id="acctManageList"></div>
+      <div class="muted" style="font-size:11.5px;line-height:1.6;margin-top:4px">账号用于分平台收集灵感与写作；小红书 / 视频号 / 公众号已预置。点账号可改名称、平台、人设与主题色。</div>
+    </div>
+
     <div class="sec-t"><h2><svg><use href="#i-inbox"/></svg>数据管理</h2></div>
     <div class="card">
       <div class="row">
@@ -883,7 +900,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.34</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.35</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -933,6 +950,8 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       <button style="flex:1" data-s="写作中" onclick="Detail.setStatus('写作中')">写作中</button>
       <button style="flex:1" data-s="已发布" onclick="Detail.setStatus('已发布')">已发布</button>
     </div>
+    <label class="fl" style="margin-bottom:8px;display:block">发布到账号</label>
+    <div class="chips" id="dtAccounts" style="margin-bottom:14px"></div>
     <div style="margin-bottom:6px">
       <label class="fl" style="margin:0">配图 <span id="dtImgCount" style="font-weight:400"></span></label>
     </div>
@@ -1086,19 +1105,30 @@ var IDB=(function(){
 
 /* ================= 数据模型 ================= */
 var Data={
-  notes:[], cards:[], trash:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'https://lingxiangji.onlyvideoget.workers.dev/transcribe',whisperModel:'whisper-1',autoPunct:false},
+  notes:[], cards:[], trash:[], accounts:[], profile:{}, settings:{theme:'auto',asrMode:'builtin',whisperProxy:'https://lingxiangji.onlyvideoget.workers.dev/transcribe',whisperModel:'whisper-1',autoPunct:false},
   load:function(){
     this.notes=LS.get('notes',[]);
     this.cards=LS.get('cards',[]);
     this.trash=LS.get('trash',[]);
+    this.accounts=LS.get('accounts',[]);
     this.profile=LS.get('profile',{name:'Bonnie',avatar:'',sub:'自媒体创作者'});
     this.settings=LS.get('settings',{theme:'auto'});
   },
   saveNotes:function(){LS.set('notes',this.notes);},
   saveCards:function(){LS.set('cards',this.cards);},
   saveTrash:function(){LS.set('trash',this.trash);},
+  saveAccounts:function(){LS.set('accounts',this.accounts);},
   saveProfile:function(){LS.set('profile',this.profile);},
   saveSettings:function(){LS.set('settings',this.settings);},
+  accountById:function(id){for(var i=0;i<this.accounts.length;i++)if(this.accounts[i].id===id)return this.accounts[i];return null;},
+  acctName:function(id){var a=this.accountById(id);return a?a.name:'';},
+  acctColor:function(id){var a=this.accountById(id);return a?a.color:'#9CA3AF';},
+  curAccountId:function(){
+    var c=this.settings.curAccount;
+    if(c&&this.accountById(c))return c;
+    for(var i=0;i<this.accounts.length;i++)if(this.accounts[i].active!==false)return this.accounts[i].id;
+    return '';
+  },
   // 用户开始记录后，清除所有示例（seed:true）数据，只保留用户自己的
   clearSeed:function(){
     var had=false;
@@ -2283,6 +2313,7 @@ var Rec={
       id:uid(),rid:'',title:d.title||'未命名灵感',text:d.text,
       tags:d.tags||[],date:today(),status:'灵感',
       words:d.text.length,hasAudio:!!d.audio,imgCount:0,
+      accounts:(d.accounts&&d.accounts.length)?d.accounts:[Data.curAccountId()],
       created:Date.now(),synced:false
     };
     Data.notes.unshift(note);Data.saveNotes();
@@ -2300,7 +2331,31 @@ var Rec={
 /* ================= 渲染 ================= */
 var Render={
   _tc:true,
-  all:function(){this.overview();this.today();this.notes(2);this.header();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();Graph.draw();},
+  all:function(){this.overview();this.today();this.notes(2);this.header();this.accounts();Heat.render();Leaf.render();Leaf.kwChips();this.memoFull();Graph.draw();},
+  accounts:function(){
+    var box=$('#acctSwitcher');if(!box)return;
+    var cur=Data.curAccountId();
+    var h=Data.accounts.filter(function(a){return a.active!==false;}).map(function(a){
+      var on=(a.id===cur)?' on':'';
+      return '<button class="chip acct-pill'+on+'" onclick="Render.setAccount(\''+a.id+'\')"><span class="adot" style="background:'+a.color+'"></span>'+esc(a.name)+'</button>';
+    }).join('');
+    box.innerHTML=h;
+    var hint=document.getElementById('recAccountHint');
+    if(hint)hint.textContent='录入将归入「'+(Data.acctName(cur)||'未分配')+'」';
+  },
+  setAccount:function(id){Data.settings.curAccount=id;Data.saveSettings();this.accounts();toast('已切到「'+(Data.acctName(id)||'未分配')+'」');},
+  acctFilter:function(){
+    var box=$('#acctFilter');if(!box)return;
+    if(this._acct===undefined)this._acct='all';
+    var self=this;
+    var h='<button class="'+(this._acct==='all'?'on':'')+'" onclick="Render.setAcct(\'all\')">全部</button>';
+    Data.accounts.forEach(function(a){if(a.active===false)return;
+      h+='<button class="'+(self._acct===a.id?'on':'')+'" onclick="Render.setAcct(\''+a.id+'\')">'+esc(a.name)+'</button>';
+    });
+    h+='<button class="'+(this._acct==='none'?'on':'')+'" onclick="Render.setAcct(\'none\')">未分配</button>';
+    box.innerHTML=h;
+  },
+  setAcct:function(id){this._acct=id;this.memoFull();},
   header:function(){
     var p=Data.profile;
     var av=p.avatar?'<img class="avatar-sm" src="'+p.avatar+'" alt="">':'<svg style="width:36px;height:36px;vertical-align:middle"><use href="#i-logo"/></svg>';
@@ -2341,6 +2396,7 @@ var Render={
   noteCardHTML:function(n,home){
     var diff=dayDiff(n.date);
     var when=diff===0?'今天':shortDate(n.date);
+    var accts=(n.accounts||[]).map(function(id){var a=Data.accountById(id);return a?'<span class="adot" title="'+esc(a.name)+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:4px"></span>':'';}).join('');
     var tags=n.tags&&n.tags.length?'<div class="chips" style="margin-top:8px">'+n.tags.slice(0,4).map(function(t){return '<span class="chip">#'+esc(t)+'</span>';}).join('')+'</div>':'';
     var desc=n.text?esc(n.text):'<span style="opacity:.5">（暂无文字稿）</span>';
     return '<div class="note st-'+esc(n.status)+'" onclick="Detail.open(\''+n.id+'\')" data-sp-bindable="database" data-sp-database-id="cRKW5hKgC1KqufjGilvVmP">'+
@@ -2348,7 +2404,7 @@ var Render={
       '<h3>'+esc(n.title)+'</h3>'+
       '<div class="pv">'+desc+'</div>'+
       (n.imgCount>0?'<div class="card-imgs" data-cid="'+n.id+'"></div>':'')+
-      '<div class="mt">'+
+      '<div class="mt">'+accts+
         '<span class="badge'+(n.status==='已发布'?' g':n.status==='写作中'?' b':'')+'">'+esc(n.status)+'</span>'+
         '<span>'+when+'</span>'+
         (n.hasAudio?'<span class="tag"><svg><use href="#i-audio"/></svg>录音</span>':'')+
@@ -2371,12 +2427,20 @@ var Render={
   memoFull:function(f){
     if(f)this._mf=f;
     f=this._mf||'all';
+    if(this._acct===undefined)this._acct='all';
     var box=$('#memoListFull');
     if(!box)return;
     $$('#memoFilter button').forEach(function(b){b.classList.toggle('on',b.dataset.f===f);});
+    this.acctFilter();
     var kw=$('#memoSearch').value.trim().toLowerCase();
+    var self=this;
     var list=Data.notes.filter(function(n){
       if(f!=='all'&&n.status!==f)return false;
+      if(self._acct&&self._acct!=='all'){
+        var aa=n.accounts||[];
+        if(self._acct==='none'){if(aa.length)return false;}
+        else if(aa.indexOf(self._acct)<0)return false;
+      }
       if(kw){
         var haystack=(n.title+' '+(n.text||'')+' '+(n.tags||[]).join(' ')).toLowerCase();
         return haystack.indexOf(kw)!==-1;
@@ -3072,6 +3136,7 @@ var Detail={
     this.toggleTitleBtns();
     this.toggleOrig();
     this.paintTags();
+    this.paintAccounts();
     this.paintAudio();
     this.paintImgs();
     $$('#dtStatus button').forEach(function(b){b.classList.toggle('on',b.dataset.s===n.status);});
@@ -3084,6 +3149,27 @@ var Detail={
     }).join('');
     if(!n.tags||!n.tags.length)h='<span class="chip g">暂无标签，可从文字稿自动提取</span>';
     $('#dtTags').innerHTML=h;
+  },
+  paintAccounts:function(){
+    var n=this.cur;if(!n)return;
+    var self=this;
+    var h=Data.accounts.filter(function(a){return a.active!==false;}).map(function(a){
+      var on=(n.accounts||[]).indexOf(a.id)>=0;
+      return '<span class="chip'+(on?' g':'')+'" onclick="Detail.toggleAccount(\''+a.id+'\')">'+esc(a.name)+'</span>';
+    }).join('');
+    var none=(!n.accounts||!n.accounts.length);
+    h+='<span class="chip'+(none?' g':'')+'" onclick="Detail.toggleAccount(\'\')">未分配</span>';
+    $('#dtAccounts').innerHTML=h;
+  },
+  toggleAccount:function(id){
+    var n=this.cur;if(!n)return;
+    n.accounts=n.accounts||[];
+    if(id===''){n.accounts=[];}
+    else{
+      var i=n.accounts.indexOf(id);
+      if(i>=0)n.accounts.splice(i,1);else n.accounts.push(id);
+    }
+    this.dirty=true;this.paintAccounts();
   },
   paintAudio:function(){
     var n=this.cur,box=$('#dtAudio');
@@ -3271,6 +3357,71 @@ var Me={
     if($('#dsKey'))$('#dsKey').value=dk;
     var st=document.getElementById('dsKeyState');
     if(st)st.textContent=dk?('已配置：sk-••••'+dk.slice(-4)+'（只存本机）'):'未配置，点任意 AI 按钮时会提示填写；也可在下方直接粘贴';
+    this.renderAccounts();
+  },
+  renderAccounts:function(){
+    var box=$('#acctManageList');if(!box)return;
+    if(!Data.accounts.length){box.innerHTML='<div class="muted">还没有账号，点右上角「+ 新增」</div>';return;}
+    var h=Data.accounts.map(function(a){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)">'+
+        '<span class="adot" style="width:12px;height:12px;background:'+a.color+'"></span>'+
+        '<div style="flex:1;min-width:0">'+
+          '<b style="font-size:13px;display:block">'+esc(a.name)+'</b>'+
+          '<span style="font-size:11px;color:var(--text3)">'+(a.platform||'')+(a.active===false?' · 已停用':'')+'</span>'+
+        '</div>'+
+        '<button class="btn btn-s" style="flex:none;padding:0 10px" onclick="Me.acctDlg(\''+a.id+'\')">编辑</button>'+
+        '<button class="btn btn-s btn-d" style="flex:none;padding:0 10px" onclick="Me.delAcct(\''+a.id+'\')">删除</button>'+
+      '</div>';
+    }).join('');
+    box.innerHTML=h;
+  },
+  acctDlg:function(id){
+    var a=id?Data.accountById(id):null;
+    var pal=['#E8553A','#2E9E5B','#3B6DCB','#BA7517','#993C1D','#7F77DD','#0F6E56','#D4537E'];
+    var color=(a&&a.color)||pal[0];
+    var pf=['小红书','视频号','公众号','抖音','B站','微博','通用'];
+    var psel=pf.map(function(p){return '<option'+(a&&a.platform===p?' selected':'')+'>'+p+'</option>';}).join('');
+    var sw=pal.map(function(c){return '<span class="adot" data-c="'+c+'" style="width:22px;height:22px;background:'+c+';cursor:pointer;border:2px solid '+(c===color?'#3D3D3D':'transparent')+'" onclick="Me._pickColor(this)"></span>';}).join('');
+    var h='<h4>'+(a?'编辑账号':'新增账号')+'</h4>'+
+      '<label class="fl" style="margin-top:8px">名称</label><input type="text" id="acName" value="'+(a?esc(a.name):'')+'" placeholder="如：小红书">'+
+      '<label class="fl" style="margin-top:8px">平台</label><select id="acPf" style="width:100%;padding:8px;border-radius:8px;border:0.5px solid var(--line)">'+psel+'</select>'+
+      '<label class="fl" style="margin-top:8px">人设 / 语气</label><textarea id="acTone" style="min-height:54px" placeholder="如：温柔治愈、第一人称、带 emoji 钩子">'+((a&&a.tone)||'')+'</textarea>'+
+      '<label class="fl" style="margin-top:8px">主题色</label><div id="acSw" style="display:flex;gap:8px;margin:6px 0">'+sw+'</div>'+
+      '<label class="fl" style="margin-top:6px;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="acActive"'+(a&&a.active===false?'':' checked')+'> 启用该账号</label>'+
+      '<div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">取消</button>'+
+      '<button class="btn btn-p" onclick="Me.saveAcct(\''+id+'\')">保存</button></div>';
+    $('#dlg').innerHTML=h;$('#mask').classList.add('on');
+    window._acColor=color;
+  },
+  _pickColor:function(el){
+    window._acColor=el.dataset.c;
+    $$('#acSw .adot').forEach(function(s){s.style.borderColor='transparent';});
+    el.style.borderColor='#3D3D3D';
+  },
+  saveAcct:function(id){
+    var name=($('#acName').value||'').trim();
+    if(!name){toast('请填写账号名称');return;}
+    var pf=$('#acPf').value, tone=($('#acTone').value||'').trim();
+    var color=window._acColor||'#639922';
+    var active=document.getElementById('acActive').checked;
+    if(id){
+      var a=Data.accountById(id);if(a){a.name=name;a.platform=pf;a.tone=tone;a.color=color;a.active=active;}
+    }else{
+      Data.accounts.push({id:'ac_'+Date.now().toString(36),name:name,platform:pf,tone:tone,color:color,autoTags:[],active:active});
+    }
+    Data.saveAccounts();closeMask();Me.renderAccounts();Render.all();
+    toast('账号已保存');
+  },
+  delAcct:function(id){
+    var a=Data.accountById(id);if(!a)return;
+    var self=this;
+    confirmDlg('删除账号','删除「'+esc(a.name)+'」？该账号下的备忘录不会删除，只是变为「未分配」。','删除',function(){
+      Data.accounts=Data.accounts.filter(function(x){return x.id!==id;});
+      Data.notes.forEach(function(n){if(n.accounts){n.accounts=n.accounts.filter(function(x){return x!==id;});}});
+      if(Data.settings.curAccount===id)Data.settings.curAccount='';
+      Data.saveAccounts();Data.saveNotes();Data.saveSettings();
+      self.renderAccounts();Render.all();toast('已删除账号');
+    },true);
   },
   saveAIMode:function(mode){
     Data.settings.aiMode=mode;Data.saveSettings();
@@ -3439,6 +3590,16 @@ function seed(){
 /* ================= 启动 ================= */
 (function boot(){
   Data.load();
+  // 多账号：首次启动写入默认账号（小红书 / 视频号 / 公众号）
+  if(!LS.get('accountsSeeded',false)){
+    Data.accounts=[
+      {id:'ac_xhs',name:'小红书',platform:'小红书',tone:'温柔治愈、第一人称、带 emoji 钩子，标题≤18字',color:'#E8553A',autoTags:[],active:true},
+      {id:'ac_wx',name:'视频号',platform:'视频号',tone:'生活化、有温度、适合微信分享',color:'#2E9E5B',autoTags:[],active:true},
+      {id:'ac_gzh',name:'公众号',platform:'公众号',tone:'逻辑清晰、有金句、深度长文',color:'#3B6DCB',autoTags:[],active:true}
+    ];
+    Data.saveAccounts();
+    LS.set('accountsSeeded',true);
+  }
   // 支持 ?dskey=sk-xxx 一键写入 DeepSeek Key（写入后立即从地址栏清除）
   try{
     var qs=location.search||'';
