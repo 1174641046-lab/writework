@@ -883,7 +883,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.33</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.34</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -940,7 +940,11 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
     <button class="btn btn-s btn-o" style="width:100%" onclick="document.getElementById('dtImgFile').click()"><svg><use href="#i-img"/></svg>添加图片</button>
     <input type="file" id="dtImgFile" accept="image/*" multiple class="hidden" onchange="Detail.pickImgs(this)">
     <div class="fl-row" style="margin-top:6px"><label class="fl">文字稿</label><button class="btn btn-s btn-o" onclick="Detail.batchReplace()"><svg><use href="#i-wand"/></svg>批量替换</button></div>
-    <textarea id="dtText" style="min-height:120px;margin-bottom:20px" oninput="Detail.markDirty();Detail.autoGrow()"></textarea>
+    <textarea id="dtText" style="min-height:120px;margin-bottom:8px" oninput="Detail.markDirty();Detail.autoGrow()"></textarea>
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <button class="btn btn-s btn-o" id="dtPolishBtn" style="flex:1" onclick="Detail.aiPolish()"><svg><use href="#i-wand"/></svg>AI 润色</button>
+      <button class="btn btn-s btn-o" id="dtOrigBtn" style="flex:1;display:none" onclick="Detail.showOrig()"><svg><use href="#i-eye"/></svg>查看原版</button>
+    </div>
     <div id="dtMeta" class="muted" style="margin-top:14px;font-size:11.5px;text-align:center"></div>
   </div>
   <div class="sheet-ft">
@@ -2088,6 +2092,25 @@ var Rec={
   _showAiUndo:function(on){
     var b=document.getElementById('aiPunctUndo');
     if(b)b.style.display=on?'flex':'none';
+    var o=document.getElementById('aiOrigBtn');
+    if(o)o.style.display=on?'flex':'none';
+  },
+  /* 查看 AI 修改前的原版文案 */
+  showOrig:function(){
+    var p=this._aiPre;
+    if(!p){toast('没有原版记录');return;}
+    var h='<h4>原版文案</h4>'+
+      '<div style="max-height:46vh;overflow:auto;background:var(--green-l);padding:12px;border-radius:10px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;color:var(--text)">'+esc(p.text||'')+'</div>';
+    if(p.title)h+='<div style="margin-top:10px;font-size:12.5px;color:var(--text2)">原标题：'+esc(p.title)+'</div>';
+    h+='<div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">关闭</button>'+
+       '<button class="btn btn-p" onclick="Rec.restoreOrig()">恢复原版</button></div>';
+    $('#dlg').innerHTML=h;$('#mask').classList.add('on');
+  },
+  restoreOrig:function(){
+    if(!this._aiPre)return;
+    this.aiUndo();
+    closeMask();
+    toast('已恢复原版文案');
   },
   aiUndo:function(){
     if(!this._aiPre)return;
@@ -2911,7 +2934,7 @@ var Detail={
   cur:null,dirty:false,_a:null,
   open:function(id){
     var n=Data.noteById(id);if(!n)return;
-    this.cur=n;this.dirty=false;
+    this.cur=n;this.dirty=false;this._orig=null;
     $('#sheet').classList.add('on');
     document.body.style.overflow='hidden';
     this.paint();
@@ -2934,23 +2957,85 @@ var Detail={
   onTitleInput:function(){this.markDirty();this.toggleTitleBtns();},
   toggleTitleBtns:function(){
     var v=$('#dtTitleIn').value.trim();
+    var has=!!(v||($('#dtText').value||'').trim());
     var btn=$('#dtOptBtn'),clr=$('#dtTitleClear');
-    if(btn)btn.style.display=v?'flex':'none';
+    if(btn)btn.style.display=has?'flex':'none';
     if(clr)clr.style.display=v?'flex':'none';
   },
   clearTitle:function(){var t=$('#dtTitleIn');if(t){t.value='';t.focus();}this.onTitleInput();},
+  /* AI 优化标题：走 DeepSeek（/title），带本地兜底 */
   optimizeTitle:function(){
-    var raw=$('#dtTitleIn').value.trim();
-    if(!raw){toast('先输入标题再优化');return;}
-    var opts=genTitleOptions(raw);
-    if(!opts.length){toast('暂无法优化');return;}
-    var h='<h4>AI 优化标题</h4><p style="margin-bottom:12px">根据「'+esc(raw)+'」生成更适自媒体发布的版本，点选即可替换：</p>'+
-      '<div style="display:flex;flex-direction:column;gap:8px">';
-    opts.forEach(function(o,i){h+='<button class="btn" style="justify-content:flex-start;text-align:left;font-weight:500" onclick="Detail.applyOpt('+i+')">'+esc(o)+'</button>';});
-    h+='</div><div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">取消</button></div>';
-    $('#dlg').innerHTML=h;
-    $('#mask').classList.add('on');
-    this._opts=opts;
+    var self=this;
+    var cur=$('#dtTitleIn').value.trim();
+    var txt=($('#dtText').value||'').trim();
+    var src=txt||cur;
+    if(!src){toast('先写点内容再优化标题');return;}
+    Rec._ensureKey(function(){
+      Rec._aiRequest('/title',{text:src},function(j){
+        var t=(j&&j.title||'').trim();
+        if(!t){toast('AI 未返回标题');return;}
+        var opts=[t];
+        try{
+          var local=genTitleOptions(cur||t)||[];
+          for(var i=0;i<local.length&&opts.length<3;i++){if(local[i]&&opts.indexOf(local[i])<0)opts.push(local[i]);}
+        }catch(e){}
+        self._opts=opts;self._aiTags=(j&&j.tags)||[];
+        var h='<h4>AI 优化标题</h4><p style="margin-bottom:12px">由 DeepSeek 根据文字稿生成，点选即可替换：</p>'+
+          '<div style="display:flex;flex-direction:column;gap:8px">';
+        opts.forEach(function(o,i){h+='<button class="btn" style="justify-content:flex-start;text-align:left;font-weight:500" onclick="Detail.applyOpt('+i+')">'+esc(o)+'</button>';});
+        h+='</div>';
+        if(self._aiTags.length){
+          h+='<div style="margin-top:14px"><label class="fl">推荐标签（点击添加）</label><div class="chips">';
+          self._aiTags.forEach(function(t,i){h+='<span class="chip g" onclick="Detail.addAITag('+i+')">#'+esc(t)+'</span>';});
+          h+='</div></div>';
+        }
+        h+='<div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">取消</button></div>';
+        $('#dlg').innerHTML=h;$('#mask').classList.add('on');
+      },function(e){toast('AI 标题失败：'+(e&&e.message||'请检查网络或 Key'));});
+    });
+  },
+  addAITag:function(i){
+    var t=(this._aiTags||[])[i];
+    if(!t)return;
+    this.cur.tags=this.cur.tags||[];
+    if(this.cur.tags.indexOf(t)<0){this.cur.tags.push(t);this.dirty=true;}
+    this.paintTags();closeMask();toast('已添加标签 #'+t);
+  },
+  /* AI 润色文字稿（DeepSeek /polish），保留原版可回看 */
+  aiPolish:function(){
+    var n=this.cur;if(!n)return;
+    var txt=($('#dtText').value||'').trim();
+    if(!txt){toast('没有可润色的文字');return;}
+    var self=this,btn=$('#dtPolishBtn');
+    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 润色';}};
+    Rec._ensureKey(function(){
+      if(btn){btn.disabled=true;btn.textContent='润色中…';}
+      Rec._aiRequest('/polish',{text:txt},function(j){
+        restore();
+        var t=(j&&j.text||'').trim();
+        if(!t){toast('AI 润色未返回内容');return;}
+        if(!self._orig)self._orig={text:$('#dtText').value,title:$('#dtTitleIn').value};
+        $('#dtText').value=t;self.autoGrow();self.markDirty();
+        self.toggleOrig();
+        toast('已 AI 润色，可查看原版');
+      },function(e){restore();toast('AI 润色失败：'+(e&&e.message||'请检查网络或 Key'));});
+    });
+  },
+  toggleOrig:function(){var b=$('#dtOrigBtn');if(b)b.style.display=this._orig?'flex':'none';},
+  showOrig:function(){
+    var o=this._orig;
+    if(!o){toast('这条没有原版记录（AI 润色后才会保留）');return;}
+    var h='<h4>原版文案</h4>'+
+      '<div style="max-height:46vh;overflow:auto;background:var(--green-l);padding:12px;border-radius:10px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;color:var(--text)">'+esc(o.text||'')+'</div>'+
+      '<div class="acts" style="margin-top:14px"><button class="btn" onclick="closeMask()">关闭</button>'+
+      '<button class="btn btn-p" onclick="Detail.restoreOrig()">恢复原版</button></div>';
+    $('#dlg').innerHTML=h;$('#mask').classList.add('on');
+  },
+  restoreOrig:function(){
+    var o=this._orig;if(!o)return;
+    $('#dtText').value=o.text;this.autoGrow();this.markDirty();
+    this._orig=null;this.toggleOrig();
+    closeMask();toast('已恢复原版文案');
   },
   applyOpt:function(i){
     var opts=this._opts||[];
@@ -2985,6 +3070,7 @@ var Detail={
     $('#dtTitleIn').value=n.title;
     $('#dtText').value=n.text;this.autoGrow();
     this.toggleTitleBtns();
+    this.toggleOrig();
     this.paintTags();
     this.paintAudio();
     this.paintImgs();
@@ -3120,6 +3206,7 @@ var Detail={
     n.synced=false;
     Data.saveNotes();
     this.dirty=false;
+    this._orig=null;this.toggleOrig();
     Render.all();
     try{Cloud.pushNote(n);}catch(e){}
     this._close();
@@ -3441,6 +3528,7 @@ function seed(){
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
           <button class="btn btn-ghost" id="aiPunctUndo" style="display:none" onclick="Rec.aiUndo()"><svg><use href="#i-back"/></svg>撤销</button>
+          <button class="btn btn-ghost" id="aiOrigBtn" style="display:none" onclick="Rec.showOrig()"><svg><use href="#i-eye"/></svg>原版</button>
           <button class="btn btn-ghost" id="aiPunctBtn" onclick="Rec.aiPunct()"><svg><use href="#i-wand"/></svg>AI 标点</button>
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
