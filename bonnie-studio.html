@@ -849,7 +849,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
       </div>
       <div id="dsKeyOpts" style="margin-top:8px">
         <div class="row" style="display:block">
-          <div class="lb" style="margin-bottom:7px"><b>DeepSeek Key</b><span>以 sk- 开头，只保存在本机浏览器，不会上传</span></div>
+          <div class="lb" style="margin-bottom:7px"><b>DeepSeek Key</b><span id="dsKeyState">以 sk- 开头，只保存在本机浏览器，不会上传</span></div>
           <input type="password" id="dsKey" placeholder="sk-..." onchange="Me.saveAIKey()">
         </div>
       </div>
@@ -883,7 +883,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.32</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.33</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -1933,6 +1933,25 @@ var Rec={
   _aiNeedMsg:function(){
     return (Data.settings.aiMode||'direct')==='direct'?'请先在设置里填写 DeepSeek Key':'未配置 AI 代理地址';
   },
+  /* 缺 Key 时就地弹框索取，填完立刻继续，不用跑去设置页 */
+  _ensureKey:function(cb){
+    var self=this;
+    if((Data.settings.aiMode||'direct')!=='direct'){
+      if(this._punctBase()){cb();return;}
+      toast('未配置 AI 代理地址');return;
+    }
+    if((Data.settings.dsKey||'').trim()){cb();return;}
+    if(typeof prompt!=='function'){toast('请到「设置 → DeepSeek Key」填写');return;}
+    var v=prompt('粘贴你的 DeepSeek Key（sk- 开头）\n\n只保存在本机浏览器，不会上传到任何服务器','');
+    if(!v||!v.trim()){toast('未填写 Key，已取消');return;}
+    v=v.trim();
+    Data.settings.dsKey=v;Data.settings.aiMode='direct';Data.saveSettings();
+    if($('#dsKey'))$('#dsKey').value=v;
+    var st=document.getElementById('dsKeyState');
+    if(st)st.textContent='已配置：sk-••••'+v.slice(-4)+'（只存本机）';
+    toast('Key 已保存到本机');
+    cb();
+  },
   _dsTemp:function(route){return route==='/title'?0.6:(route==='/polish'?0.4:0);},
   _parseJSONSafe:function(s){
     if(!s)return {};
@@ -2000,54 +2019,57 @@ var Rec={
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    if(!this.aiReady()){toast(this._aiNeedMsg());return;}
-    var btn=document.getElementById('aiPunctBtn');
-    if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>优化中…';}
     var self=this;
-    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标点';}};
-    this._punctRequest(txt,function(t){
-      self._capturePre();
-      self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
-      self.refreshTagSugs();self.refreshTitleOpts();self._showAiUndo(true);
-      toast('已 AI 优化标点，可撤销');restore();
-    },function(){toast('AI 标点失败，保持原文');restore();});
+    this._ensureKey(function(){
+      var btn=document.getElementById('aiPunctBtn');
+      if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>优化中…';}
+      var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标点';}};
+      self._punctRequest(txt,function(t){
+        self._capturePre();
+        self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
+        self.refreshTagSugs();self.refreshTitleOpts();self._showAiUndo(true);
+        toast('已 AI 优化标点，可撤销');restore();
+      },function(){toast('AI 标点失败，保持原文');restore();});
+    });
   },
   aiTitle:function(){
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('先写点内容，才能生成标题');return;}
-    if(!this.aiReady()){toast(this._aiNeedMsg());return;}
-    var btn=document.getElementById('aiTitleBtn');
-    if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>生成中…';}
     var self=this;
-    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标题';}};
-    this._aiRequest('/title',{text:txt},function(j){
-      self._capturePre();
-      if(j&&j.title){self.draft.title=j.title;$('#draftTitle').value=j.title;}
-      if(j&&Array.isArray(j.tags)&&j.tags.length){
-        j.tags.forEach(function(t){if((self.draft.tags||[]).indexOf(t)<0)self.draft.tags.push(t);});
-      }
-      self.paintDraft();self.cacheDraft();self._showAiUndo(true);
-      toast('已用 AI 生成标题与标签');restore();
-    },function(){toast('AI 标题失败，保持原样');restore();});
+    this._ensureKey(function(){
+      var btn=document.getElementById('aiTitleBtn');
+      if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>生成中…';}
+      var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 标题';}};
+      self._aiRequest('/title',{text:txt},function(j){
+        self._capturePre();
+        if(j&&j.title){self.draft.title=j.title;$('#draftTitle').value=j.title;}
+        if(j&&Array.isArray(j.tags)&&j.tags.length){
+          j.tags.forEach(function(t){if((self.draft.tags||[]).indexOf(t)<0)self.draft.tags.push(t);});
+        }
+        self.paintDraft();self.cacheDraft();self._showAiUndo(true);
+        toast('已用 AI 生成标题与标签');restore();
+      },function(){toast('AI 标题失败，保持原样');restore();});
+    });
   },
   aiPolish:function(){
     var d=this.draft;if(!d)return;
     var txt=($('#draftText').value||'').trim();
     if(!txt){toast('没有可优化的文字');return;}
-    if(!this.aiReady()){toast(this._aiNeedMsg());return;}
-    var btn=document.getElementById('aiPolishBtn');
-    if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>润色中…';}
     var self=this;
-    var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 润色';}};
-    this._aiRequest('/polish',{text:txt},function(j){
-      var t=(j&&j.text||'').trim();
-      if(!t){toast('AI 润色未返回内容');restore();return;}
-      self._capturePre();
-      self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
-      self.refreshTagSugs();self.refreshTitleOpts();self._showAiUndo(true);
-      toast('已 AI 润色，可撤销');restore();
-    },function(){toast('AI 润色失败，保持原文');restore();});
+    this._ensureKey(function(){
+      var btn=document.getElementById('aiPolishBtn');
+      if(btn){btn.disabled=true;btn.innerHTML='<svg><use href="#i-wand"/></svg>润色中…';}
+      var restore=function(){if(btn){btn.disabled=false;btn.innerHTML='<svg><use href="#i-wand"/></svg>AI 润色';}};
+      self._aiRequest('/polish',{text:txt},function(j){
+        var t=(j&&j.text||'').trim();
+        if(!t){toast('AI 润色未返回内容');restore();return;}
+        self._capturePre();
+        self.draft.text=t;$('#draftText').value=t;self.cacheDraft();
+        self.refreshTagSugs();self.refreshTitleOpts();self._showAiUndo(true);
+        toast('已 AI 润色，可撤销');restore();
+      },function(){toast('AI 润色失败，保持原文');restore();});
+    });
   },
   _aiRequest:function(route,payload,ok,fail){
     if(this._useDirect()){this._dsDirect(route,payload,ok,fail);return;}
@@ -3158,7 +3180,10 @@ var Me={
     var aim=Data.settings.aiMode||'direct';
     $$('#aiModeSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.a===aim);});
     var dko=document.getElementById('dsKeyOpts');if(dko)dko.style.display=(aim==='direct')?'block':'none';
-    if($('#dsKey'))$('#dsKey').value=Data.settings.dsKey||'';
+    var dk=(Data.settings.dsKey||'').trim();
+    if($('#dsKey'))$('#dsKey').value=dk;
+    var st=document.getElementById('dsKeyState');
+    if(st)st.textContent=dk?('已配置：sk-••••'+dk.slice(-4)+'（只存本机）'):'未配置，点任意 AI 按钮时会提示填写；也可在下方直接粘贴';
   },
   saveAIMode:function(mode){
     Data.settings.aiMode=mode;Data.saveSettings();
