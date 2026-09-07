@@ -905,7 +905,7 @@ html[data-theme="dark"] .avatar-lg-fb{color:#12200F}
 
     <div class="sec-t"><h2><svg><use href="#i-note"/></svg>关于</h2></div>
     <div class="card">
-      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.36</b></div>
+      <div class="row"><div class="lb"><b>版本</b><span>灵想集</span></div><b style="color:var(--green);font-size:14px">v1.9.37</b></div>
       <div class="row"><div class="lb"><b>存储说明</b><span style="line-height:1.6">文字稿、标题、标签同步到资料库云端；录音与图片因体积较大，仅保存在本机浏览器。</span></div></div>
     </div>
     <div class="ver">
@@ -2147,8 +2147,11 @@ var Rec={
   _showAiUndo:function(on){
     var b=document.getElementById('aiPunctUndo');
     if(b)b.style.display=on?'flex':'none';
+    this._refreshOrigBtn();
+  },
+  _refreshOrigBtn:function(){
     var o=document.getElementById('aiOrigBtn');
-    if(o)o.style.display=on?'flex':'none';
+    if(o)o.style.display=this.draft?'flex':'none';
   },
   /* 查看 AI 修改前的原版文案 */
   showOrig:function(){
@@ -2195,6 +2198,8 @@ var Rec={
     var src=document.getElementById('draftSrc');
     if(src)src.textContent=this.draft.audio?(this.mode==='whisper'?'Whisper 转写 · 原生带标点':'浏览器实时识别 · 已自动补标点'):'';
     this.paintDraft();
+    if(!this._aiPre)this._capturePre();
+    this._refreshOrigBtn();
   },
   play:function(btn){
     var ab=$('#draftAudioBox'),a=ab._a;if(!a)return;
@@ -3806,11 +3811,11 @@ function seed(){
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
           <button class="btn btn-ghost" id="aiPunctUndo" style="display:none" onclick="Rec.aiUndo()"><svg><use href="#i-back"/></svg>撤销</button>
-          <button class="btn btn-ghost" id="aiOrigBtn" style="display:none" onclick="Rec.showOrig()"><svg><use href="#i-eye"/></svg>原版</button>
           <button class="btn btn-ghost" id="aiPunctBtn" onclick="Rec.aiPunct()"><svg><use href="#i-wand"/></svg>AI 标点</button>
         </div>
         <div class="rec-pop-btns" style="margin-top:8px">
           <button class="btn btn-ghost" id="aiTitleBtn" onclick="Rec.aiTitle()"><svg><use href="#i-wand"/></svg>AI 标题</button>
+          <button class="btn btn-ghost" id="aiOrigBtn" onclick="Rec.showOrig()"><svg><use href="#i-eye"/></svg>查看原稿</button>
           <button class="btn btn-ghost" id="aiPolishBtn" onclick="Rec.aiPolish()"><svg><use href="#i-wand"/></svg>AI 润色</button>
         </div>
       </div>
